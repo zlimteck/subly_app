@@ -1,0 +1,184 @@
+.verify-email-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+  padding: 20px;
+}
+
+.verify-email-box {
+  background: var(--bg-secondary);
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+}
+
+.verify-email-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.verify-email-title {
+  color: var(--primary);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.terminal-prompt {
+  color: var(--text-secondary);
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.verify-email-content {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verify-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.verify-icon {
+  color: var(--primary);
+}
+
+.verify-loading .verify-icon {
+  color: var(--primary);
+}
+
+.verify-success .verify-icon {
+  color: var(--success);
+}
+
+.verify-error .verify-icon {
+  color: var(--error);
+}
+
+.rotating {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.verify-message {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.verify-redirect {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.verify-btn {
+  padding: 12px 24px;
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-top: 12px;
+}
+
+.verify-btn:hover {
+  background: var(--primary);
+  color: var(--bg-primary);
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+  transform: translateY(-2px);
+}
+
+.verify-btn:active {
+  transform: translateY(0);
+}
+
+.verify-footer {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 255, 65, 0.1);
+  text-align: center;
+}
+
+.verify-footer-text {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.terminal-cursor {
+  animation: cursor-blink 1s step-end infinite;
+  color: var(--primary);
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .verify-email-box {
+    padding: 24px;
+  }
+
+  .verify-email-title {
+    font-size: 20px;
+  }
+
+  .terminal-prompt {
+    font-size: 16px;
+  }
+
+  .verify-message {
+    font-size: 16px;
+  }
+
+  .verify-icon {
+    width: 48px;
+    height: 48px;
+  }
+}

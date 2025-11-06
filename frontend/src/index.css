@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Terminal color scheme - Dark theme */
+  --bg-primary: #0a0e14;
+  --bg-secondary: #0f1419;
+  --bg-tertiary: #151a1f;
+  --terminal-green: #00ff41;
+  --terminal-green-dark: #00cc33;
+  --terminal-green-light: #66ff88;
+  --text-primary: #00ff41;
+  --text-secondary: #33ff66;
+  --text-muted: #66ff88;
+  --text-dim: #558855;
+  --border-color: #1a3a2a;
+  --error: #ff4444;
+  --warning: #ffaa00;
+  --success: #00ff41;
+
+  /* Shadows with green glow */
+  --shadow-sm: 0 1px 2px rgba(0, 255, 65, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 255, 65, 0.15);
+  --shadow-lg: 0 10px 15px rgba(0, 255, 65, 0.2);
+  --glow: 0 0 10px rgba(0, 255, 65, 0.3);
+}
+
+/* Solarized Dark theme */
+[data-theme="solarized"] {
+  --bg-primary: #002b36;
+  --bg-secondary: #073642;
+  --bg-tertiary: #0f4556;
+  --terminal-green: #2aa198;
+  --terminal-green-dark: #268bd2;
+  --terminal-green-light: #6cc9c2;
+  --text-primary: #839496;
+  --text-secondary: #93a1a1;
+  --text-muted: #657b83;
+  --text-dim: #586e75;
+  --border-color: #073642;
+  --error: #dc322f;
+  --warning: #cb4b16;
+  --success: #859900;
+
+  /* Shadows with cyan glow */
+  --shadow-sm: 0 1px 2px rgba(42, 161, 152, 0.1);
+  --shadow-md: 0 4px 6px rgba(42, 161, 152, 0.15);
+  --shadow-lg: 0 10px 15px rgba(42, 161, 152, 0.2);
+  --glow: 0 0 10px rgba(42, 161, 152, 0.3);
+}
+
+/* Dracula theme */
+[data-theme="dracula"] {
+  --bg-primary: #282a36;
+  --bg-secondary: #21222c;
+  --bg-tertiary: #383a59;
+  --terminal-green: #bd93f9;
+  --terminal-green-dark: #9580d3;
+  --terminal-green-light: #d4b3ff;
+  --text-primary: #f8f8f2;
+  --text-secondary: #e2e2dc;
+  --text-muted: #6272a4;
+  --text-dim: #44475a;
+  --border-color: #44475a;
+  --error: #ff5555;
+  --warning: #ffb86c;
+  --success: #50fa7b;
+
+  /* Shadows with purple glow */
+  --shadow-sm: 0 1px 2px rgba(189, 147, 249, 0.1);
+  --shadow-md: 0 4px 6px rgba(189, 147, 249, 0.15);
+  --shadow-lg: 0 10px 15px rgba(189, 147, 249, 0.2);
+  --glow: 0 0 10px rgba(189, 147, 249, 0.3);
+}
+
+/* Nord theme */
+[data-theme="nord"] {
+  --bg-primary: #2e3440;
+  --bg-secondary: #3b4252;
+  --bg-tertiary: #434c5e;
+  --terminal-green: #88c0d0;
+  --terminal-green-dark: #5e81ac;
+  --terminal-green-light: #8fbcbb;
+  --text-primary: #eceff4;
+  --text-secondary: #e5e9f0;
+  --text-muted: #d8dee9;
+  --text-dim: #81a1c1;
+  --border-color: #4c566a;
+  --error: #bf616a;
+  --warning: #ebcb8b;
+  --success: #a3be8c;
+
+  /* Shadows with icy blue glow */
+  --shadow-sm: 0 1px 2px rgba(136, 192, 208, 0.1);
+  --shadow-md: 0 4px 6px rgba(136, 192, 208, 0.15);
+  --shadow-lg: 0 10px 15px rgba(136, 192, 208, 0.2);
+  --glow: 0 0 10px rgba(136, 192, 208, 0.3);
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e8e8e8;
+  --terminal-green: #2563eb;
+  --terminal-green-dark: #1d4ed8;
+  --terminal-green-light: #60a5fa;
+  --text-primary: #1f2937;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --text-dim: #9ca3af;
+  --border-color: #d1d5db;
+  --error: #dc2626;
+  --warning: #f59e0b;
+  --success: #10b981;
+
+  /* Shadows without glow for light theme */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --glow: 0 0 0 transparent;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--terminal-green-dark);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--terminal-green);
+}
+
+/* Selection */
+::selection {
+  background: var(--terminal-green);
+  color: var(--bg-primary);
+}
+
+/* Terminal cursor animation */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1em;
+  background-color: var(--terminal-green);
+  animation: blink 1s infinite;
+  margin-left: 2px;
+}
+
+/* Terminal text effect */
+.terminal-text {
+  text-shadow: 0 0 5px var(--terminal-green);
+}
+
+/* Glow effect for important elements */
+.glow {
+  box-shadow: var(--glow);
+}
+
+/* Focus styles */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--terminal-green);
+  outline-offset: 2px;
+}

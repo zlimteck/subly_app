@@ -1,0 +1,37 @@
+# This Dockerfile is for production with environment variables from docker run or orchestration
+# Usage: docker build -f Dockerfile.prod -t subly:prod .
+# Run: docker run -e MONGODB_URI=... -e JWT_SECRET=... -p 3000:80 -p 5071:5071 subly:prod
+
+FROM node:20-alpine as backend-build
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm ci --only=production
+COPY backend/ ./
+
+FROM node:20-alpine as frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+FROM nginx:alpine
+# Copy backend
+COPY --from=backend-build /app/backend /app/backend
+# Copy frontend build
+COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
+# Copy nginx config
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Install Node.js in the nginx container to run backend
+RUN apk add --no-cache nodejs npm
+
+# Create a startup script
+RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'cd /app/backend && node src/server.js &' >> /start.sh && \
+    echo 'nginx -g "daemon off;"' >> /start.sh && \
+    chmod +x /start.sh
+
+EXPOSE 80 5071
+
+CMD ["/start.sh"]

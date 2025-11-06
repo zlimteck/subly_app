@@ -1,0 +1,514 @@
+import { useState, useEffect } from 'react'
+import { format } from 'date-fns'
+import axios from 'axios'
+import { useTranslation } from 'react-i18next'
+import { getUploadUrl } from '../utils/api'
+import { CATEGORIES } from '../constants/categories'
+import { getBestLogoUrl } from '../config/serviceLogos'
+import './SubscriptionForm.css'
+
+function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
+  const { t } = useTranslation()
+  const [formData, setFormData] = useState({
+    name: '',
+    amount: '',
+    billingCycle: 'monthly',
+    category: '',
+    nextBillingDate: format(new Date(), 'yyyy-MM-dd'),
+    isActive: true,
+    notes: '',
+    url: '',
+    iconUrl: '',
+    iconFilename: '',
+    isTrial: false,
+    trialEndDate: ''
+  })
+  const [iconFile, setIconFile] = useState(null)
+  const [iconPreview, setIconPreview] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [uploadingIcon, setUploadingIcon] = useState(false)
+  const [autoDetectedLogo, setAutoDetectedLogo] = useState(null)
+  const [logoSource, setLogoSource] = useState(null) // 'google', 'local', or null
+  const [useCustomLogo, setUseCustomLogo] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name,
+        amount: initialData.amount,
+        billingCycle: initialData.billingCycle,
+        category: initialData.category || '',
+        nextBillingDate: format(new Date(initialData.nextBillingDate), 'yyyy-MM-dd'),
+        isActive: initialData.isActive,
+        notes: initialData.notes || '',
+        url: initialData.url || '',
+        iconUrl: initialData.iconUrl || '',
+        iconFilename: initialData.iconFilename || '',
+        isTrial: initialData.isTrial || false,
+        trialEndDate: initialData.trialEndDate ? format(new Date(initialData.trialEndDate), 'yyyy-MM-dd') : ''
+      })
+
+      // Set preview if there's an existing icon
+      if (initialData.iconFilename) {
+        // User uploaded a custom file
+        setIconPreview(getUploadUrl(initialData.iconFilename))
+        setUseCustomLogo(true)
+      } else if (initialData.iconUrl) {
+        // Could be from Google Favicons or old data
+        setIconPreview(initialData.iconUrl)
+        // Check if it's a Google Favicons URL
+        if (initialData.iconUrl.includes('google.com/s2/favicons')) {
+          setAutoDetectedLogo(initialData.iconUrl)
+          setLogoSource('google')
+          setUseCustomLogo(false)
+        } else {
+          // Old custom URL, don't block auto-detection
+          setUseCustomLogo(false)
+        }
+      }
+
+      // Mark initial load as complete
+      setIsInitialLoad(false)
+    }
+  }, [initialData])
+
+  // Auto-detect logo when URL changes (but not on initial load to preserve existing logos)
+  useEffect(() => {
+    // Skip on initial load to preserve existing icon
+    if (isInitialLoad) {
+      return
+    }
+
+    if (!useCustomLogo) {
+      // Get logo using Google Favicons from URL
+      const { url, source } = getBestLogoUrl(formData.url)
+
+      if (url) {
+        setAutoDetectedLogo(url)
+        setLogoSource(source)
+        setIconPreview(url)
+        // Store the URL in iconUrl field (not iconFilename since it's external)
+        setFormData(prev => ({
+          ...prev,
+          iconFilename: '',
+          iconUrl: url
+        }))
+      } else {
+        setAutoDetectedLogo(null)
+        setLogoSource(null)
+        if (!iconFile && !formData.iconFilename) {
+          setIconPreview(null)
+          setFormData(prev => ({
+            ...prev,
+            iconUrl: ''
+          }))
+        }
+      }
+    }
+  }, [formData.url, useCustomLogo, iconFile, formData.iconFilename, isInitialLoad])
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+
+    // If changing trial end date, also update next billing date
+    if (name === 'trialEndDate' && value) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        nextBillingDate: value
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }))
+    }
+  }
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setError(t('subscription.iconInvalidType'))
+      return
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError(t('subscription.iconTooLarge'))
+      return
+    }
+
+    setIconFile(file)
+    setUseCustomLogo(true) // Mark as using custom logo
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setIconPreview(reader.result)
+    }
+    reader.readAsDataURL(file)
+
+    // Upload immediately
+    await uploadIcon(file)
+  }
+
+  const uploadIcon = async (file) => {
+    setUploadingIcon(true)
+    setError('')
+
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('icon', file)
+
+      const response = await axios.post('/api/upload', formDataUpload, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      // Update form data with the uploaded filename
+      setFormData(prev => ({
+        ...prev,
+        iconFilename: response.data.filename,
+        iconUrl: '' // Clear iconUrl when using uploaded file
+      }))
+
+      console.log('✅ Icon uploaded:', response.data.filename)
+    } catch (err) {
+      setError(err.response?.data?.message || t('subscription.iconUploadFailed'))
+      setIconFile(null)
+      setIconPreview(null)
+    } finally {
+      setUploadingIcon(false)
+    }
+  }
+
+  const removeIcon = () => {
+    setIconFile(null)
+    setIconPreview(null)
+    setUseCustomLogo(false) // Reset to auto-detection
+    setFormData(prev => ({
+      ...prev,
+      iconFilename: '',
+      iconUrl: ''
+    }))
+  }
+
+  const toggleCustomLogo = () => {
+    if (useCustomLogo) {
+      // Switching back to auto-detect
+      setUseCustomLogo(false)
+      setIconFile(null)
+      setFormData(prev => ({
+        ...prev,
+        iconFilename: '',
+        iconUrl: ''
+      }))
+      // This will trigger the auto-detect useEffect
+    } else {
+      // Switching to custom logo
+      setUseCustomLogo(true)
+      setAutoDetectedLogo(null)
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      await onSubmit({
+        ...formData,
+        amount: parseFloat(formData.amount)
+      })
+    } catch (err) {
+      setError(err.response?.data?.message || t('subscription.saveFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="form-container glow">
+      <div className="form-header">
+        <h2 className="terminal-text">
+          <span className="terminal-prompt">&gt;</span>{' '}
+          {initialData ? t('subscription.editTitle') : t('subscription.newTitle')}
+        </h2>
+      </div>
+
+      <form onSubmit={handleSubmit} className="subscription-form">
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="name">
+              <span className="terminal-prompt">&gt;</span> {t('subscription.name').toUpperCase()} *
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              placeholder={t('subscription.namePlaceholder')}
+              autoFocus
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="amount">
+              <span className="terminal-prompt">&gt;</span> {t('subscription.amount').toUpperCase()} *
+            </label>
+            <input
+              id="amount"
+              name="amount"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.amount}
+              onChange={handleChange}
+              required
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="billingCycle">
+              <span className="terminal-prompt">&gt;</span> {t('subscription.billingCycle').toUpperCase()} *
+            </label>
+            <select
+              id="billingCycle"
+              name="billingCycle"
+              value={formData.billingCycle}
+              onChange={handleChange}
+              required
+            >
+              <option value="monthly">{t('subscription.monthly')}</option>
+              <option value="annual">{t('subscription.annual')}</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="category">
+              <span className="terminal-prompt">&gt;</span> {t('subscription.category').toUpperCase()}
+            </label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+            >
+              <option value="">{t('subscription.selectCategory')}</option>
+              {CATEGORIES.map(cat => (
+                <option key={cat} value={cat}>{t(`categories.${cat.toLowerCase().replace(/\s+/g, '')}`)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="nextBillingDate">
+              <span className="terminal-prompt">&gt;</span> {t('subscription.nextBilling').toUpperCase()} *
+            </label>
+            <input
+              id="nextBillingDate"
+              name="nextBillingDate"
+              type="date"
+              value={formData.nextBillingDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group checkbox-group">
+            <label className="checkbox-label-spacer" aria-hidden="true">&nbsp;</label>
+            <label htmlFor="isActive">
+              <input
+                id="isActive"
+                name="isActive"
+                type="checkbox"
+                checked={formData.isActive}
+                onChange={handleChange}
+              />
+              <span>{t('subscription.active').toUpperCase()}</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group checkbox-group">
+            <label className="checkbox-label-spacer" aria-hidden="true">&nbsp;</label>
+            <label htmlFor="isTrial">
+              <input
+                id="isTrial"
+                name="isTrial"
+                type="checkbox"
+                checked={formData.isTrial}
+                onChange={handleChange}
+              />
+              <span>{t('subscription.freeTrial').toUpperCase()}</span>
+            </label>
+          </div>
+
+          {formData.isTrial && (
+            <div className="form-group">
+              <label htmlFor="trialEndDate">
+                <span className="terminal-prompt">&gt;</span> {t('subscription.trialEndDate').toUpperCase()} *
+              </label>
+              <input
+                id="trialEndDate"
+                name="trialEndDate"
+                type="date"
+                value={formData.trialEndDate}
+                onChange={handleChange}
+                required={formData.isTrial}
+                min={format(new Date(), 'yyyy-MM-dd')}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="url">
+              <span className="terminal-prompt">&gt;</span> {t('subscription.serviceUrl').toUpperCase()}
+            </label>
+            <input
+              id="url"
+              name="url"
+              type="url"
+              value={formData.url}
+              onChange={handleChange}
+              placeholder="https://example.com"
+            />
+            {!iconPreview && !formData.url && (
+              <div className="field-hint">
+                💡 {t('subscription.urlHint') || 'Enter the service URL to automatically detect the logo'}
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label>
+              <span className="terminal-prompt">&gt;</span> {t('subscription.icon').toUpperCase()}
+            </label>
+
+            {/* Auto-detected logo badge */}
+            {autoDetectedLogo && !useCustomLogo && logoSource === 'google' && (
+              <div className="logo-badge auto-detected">
+                <span className="badge-icon">✓</span>
+                <span>{t('subscription.logoFromUrl') || 'Logo from URL'}</span>
+              </div>
+            )}
+
+            {/* Custom logo toggle */}
+            {autoDetectedLogo && !useCustomLogo && (
+              <button
+                type="button"
+                onClick={toggleCustomLogo}
+                className="btn-toggle-custom"
+              >
+                {t('subscription.useCustomLogo') || 'Use custom logo instead'}
+              </button>
+            )}
+
+            {/* Show file input only if no logo preview OR user wants to upload */}
+            {!iconPreview && (
+              <div className="file-input-wrapper">
+                <input
+                  id="iconFile"
+                  name="iconFile"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp"
+                  onChange={handleFileChange}
+                  disabled={uploadingIcon}
+                />
+                <label
+                  htmlFor="iconFile"
+                  className={`file-input-label ${uploadingIcon ? 'disabled' : ''}`}
+                >
+                  <span className="terminal-prompt">&gt;</span> {t('subscription.chooseFile').toUpperCase()}
+                </label>
+              </div>
+            )}
+            {uploadingIcon && <div className="upload-status">{t('subscription.uploading')}</div>}
+
+            {iconPreview && (
+              <div className="icon-preview">
+                <img src={iconPreview} alt={t('subscription.iconPreview')} />
+                {useCustomLogo && (
+                  <div className="logo-badge custom">
+                    <span className="badge-icon">⚙</span>
+                    <span>{t('subscription.customLogo') || 'Custom logo'}</span>
+                  </div>
+                )}
+                <button type="button" onClick={removeIcon} className="btn-remove-icon">
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Show switch button if user has custom logo but URL is available */}
+            {useCustomLogo && formData.url && (
+              <button
+                type="button"
+                onClick={toggleCustomLogo}
+                className="btn-toggle-custom"
+                style={{ marginTop: '10px' }}
+              >
+                {t('subscription.switchToAutoLogo') || 'Switch to automatic logo from URL'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="notes">
+            <span className="terminal-prompt">&gt;</span> {t('subscription.notes').toUpperCase()}
+          </label>
+          <textarea
+            id="notes"
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            rows={3}
+            placeholder={t('subscription.notesPlaceholder')}
+          />
+        </div>
+
+        {error && (
+          <div className="error-message">
+            <span className="terminal-prompt">{t('common.error').toUpperCase()}:</span> {error}
+          </div>
+        )}
+
+        <div className="form-actions">
+          <button type="submit" disabled={loading} className="btn-primary">
+            {loading ? t('subscription.saving').toUpperCase() : initialData ? t('subscription.update').toUpperCase() : t('subscription.create').toUpperCase()}
+          </button>
+          {initialData && onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(initialData._id)}
+              className="btn-danger"
+            >
+              {t('subscription.delete').toUpperCase()}
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  )
+}
+
+export default SubscriptionForm

@@ -1,0 +1,29 @@
+services:
+    backend:
+      build:
+        context: /your/path/to/subly/backend
+        dockerfile: Dockerfile
+      ports:
+        - "5071:5071"
+      environment:
+        - NODE_ENV=production
+        - PORT=5071
+        - MONGODB_URI=your_mongodb_uri_here
+        - JWT_SECRET=your_jwt_secret_here
+        - FRONTEND_URL=your_frontend_url_here
+        - RESEND_API_KEY=your_resend_api_key_here
+      volumes:
+        - /your/path/to/subly/backend/uploads:/app/uploads
+      restart: unless-stopped
+
+    frontend:
+      build:
+        context: /your/path/to/subly/frontend
+        dockerfile: Dockerfile
+        args:
+          - VITE_API_URL=your_url_here
+      ports:
+        - "3000:80"
+      depends_on:
+        - backend
+      restart: unless-stopped
