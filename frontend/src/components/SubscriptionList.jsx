@@ -4,6 +4,7 @@ import { Edit2, Calendar, DollarSign, ExternalLink, LayoutGrid, List, Clock, Arr
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
 import { getUploadUrl } from '../utils/api'
+import PaymentMethodIcon from './PaymentMethodIcon'
 import './SubscriptionList.css'
 
 function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onToggleView, sortBy, onSortChange }) {
@@ -104,7 +105,7 @@ function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onTogg
                 <div className="sub-info">
                   {sub.isTrial && sub.trialEndDate && trialDaysLeft !== null && trialDaysLeft >= 0 && (
                     <div className={`info-row trial-info ${isTrialEndingSoon ? 'warning' : ''}`}>
-                      <Clock size={16} />
+                      <Clock size={16} style={{ color: 'inherit' }} />
                       <span className="info-label">{t('subscription.trialEnds')}:</span>
                       <span className="info-value">
                         {format(new Date(sub.trialEndDate), 'MMM dd, yyyy', { locale: i18n.language === 'fr' ? fr : enUS })} ({trialDaysLeft}d {t('common.daysLeft')})
@@ -124,6 +125,14 @@ function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onTogg
                     <div className="info-row monthly-equivalent">
                       <span className="info-label">{t('subscription.monthly')}:</span>
                       <span className="info-value">{formatAmount(sub.monthlyCost)}/{t('common.mo')}</span>
+                    </div>
+                  )}
+
+                  {sub.paymentMethod && (
+                    <div className="info-row payment-method-row">
+                      <PaymentMethodIcon method={sub.paymentMethod} size={16} />
+                      <span className="info-label">{t('subscription.paymentMethod')}:</span>
+                      <span className="info-value">{t(`paymentMethods.${sub.paymentMethod}`)}</span>
                     </div>
                   )}
 

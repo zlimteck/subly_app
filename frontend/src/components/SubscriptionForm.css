@@ -183,8 +183,7 @@
   display: block;
 }
 
-.checkbox-group label[for="isActive"],
-.checkbox-group label[for="isTrial"] {
+.checkbox-group .checkbox-inline {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -205,8 +204,7 @@
   letter-spacing: 1px;
 }
 
-.checkbox-group label[for="isActive"]:hover,
-.checkbox-group label[for="isTrial"]:hover {
+.checkbox-group .checkbox-inline:hover {
   border-color: var(--terminal-green);
   background: var(--bg-secondary);
 }

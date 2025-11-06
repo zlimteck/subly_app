@@ -119,7 +119,17 @@
     "useCustomLogo": "Use custom logo instead",
     "useAutoLogo": "Use automatic logo instead",
     "switchToAutoLogo": "Switch to automatic logo from URL",
-    "customLogo": "Custom logo"
+    "customLogo": "Custom logo",
+    "paymentMethod": "Payment Method",
+    "selectPaymentMethod": "Select payment method (optional)..."
+  },
+  "paymentMethods": {
+    "card": "Credit/Debit Card",
+    "paypal": "PayPal",
+    "crypto": "Cryptocurrency",
+    "bank": "Bank Transfer",
+    "paysafecard": "Paysafecard",
+    "revolut": "Revolut/N26"
   },
   "categories": {
     "ai": "AI",

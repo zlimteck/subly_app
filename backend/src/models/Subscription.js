@@ -58,6 +58,11 @@ const subscriptionSchema = new mongoose.Schema({
   },
   trialEndDate: {
     type: Date
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['card', 'paypal', 'crypto', 'bank', 'paysafecard', 'revolut', null],
+    default: null
   }
 }, {
   timestamps: true

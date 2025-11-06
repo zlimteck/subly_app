@@ -14,6 +14,7 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
     amount: '',
     billingCycle: 'monthly',
     category: '',
+    paymentMethod: '',
     nextBillingDate: format(new Date(), 'yyyy-MM-dd'),
     isActive: true,
     notes: '',
@@ -40,6 +41,7 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
         amount: initialData.amount,
         billingCycle: initialData.billingCycle,
         category: initialData.category || '',
+        paymentMethod: initialData.paymentMethod || '',
         nextBillingDate: format(new Date(initialData.nextBillingDate), 'yyyy-MM-dd'),
         isActive: initialData.isActive,
         notes: initialData.notes || '',
@@ -331,8 +333,10 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
           </div>
 
           <div className="form-group checkbox-group">
-            <label className="checkbox-label-spacer" aria-hidden="true">&nbsp;</label>
-            <label htmlFor="isActive">
+            <label>
+              <span className="terminal-prompt">&gt;</span> {t('subscription.status').toUpperCase()}
+            </label>
+            <label htmlFor="isActive" className="checkbox-inline">
               <input
                 id="isActive"
                 name="isActive"
@@ -347,8 +351,10 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
 
         <div className="form-row">
           <div className="form-group checkbox-group">
-            <label className="checkbox-label-spacer" aria-hidden="true">&nbsp;</label>
-            <label htmlFor="isTrial">
+            <label>
+              <span className="terminal-prompt">&gt;</span> {t('subscription.freeTrial').toUpperCase()}
+            </label>
+            <label htmlFor="isTrial" className="checkbox-inline">
               <input
                 id="isTrial"
                 name="isTrial"
@@ -376,6 +382,28 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
               />
             </div>
           )}
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="paymentMethod">
+              <span className="terminal-prompt">&gt;</span> {t('subscription.paymentMethod').toUpperCase()}
+            </label>
+            <select
+              id="paymentMethod"
+              name="paymentMethod"
+              value={formData.paymentMethod}
+              onChange={handleChange}
+            >
+              <option value="">{t('subscription.selectPaymentMethod')}</option>
+              <option value="card">{t('paymentMethods.card')}</option>
+              <option value="paypal">{t('paymentMethods.paypal')}</option>
+              <option value="crypto">{t('paymentMethods.crypto')}</option>
+              <option value="bank">{t('paymentMethods.bank')}</option>
+              <option value="paysafecard">{t('paymentMethods.paysafecard')}</option>
+              <option value="revolut">{t('paymentMethods.revolut')}</option>
+            </select>
+          </div>
         </div>
 
         <div className="form-row">

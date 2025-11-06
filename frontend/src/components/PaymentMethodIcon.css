@@ -1,0 +1,16 @@
+.payment-method-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--terminal-green);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.payment-method-icon:hover {
+  opacity: 1;
+}
+
+.payment-method-icon svg {
+  filter: drop-shadow(0 0 2px var(--terminal-green));
+}

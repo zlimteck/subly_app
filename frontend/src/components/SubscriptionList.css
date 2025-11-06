@@ -418,6 +418,16 @@
   font-size: 14px;
 }
 
+/* Ensure trial-info maintains proper alignment */
+.trial-info.info-row {
+  align-items: center;
+}
+
+.trial-info.info-row .info-value {
+  flex: 1;
+  text-align: right;
+}
+
 @media (max-width: 768px) {
   .subscription-grid {
     grid-template-columns: 1fr;
@@ -450,5 +460,17 @@
     margin-left: 0;
     flex: 1 1 100%;
     margin-top: 4px;
+  }
+
+  /* Allow trial-info to wrap on mobile */
+  .trial-info.info-row {
+    align-items: flex-start;
+  }
+
+  .trial-info.info-row .info-value {
+    flex: 1 1 100%;
+    margin-left: 24px;
+    margin-top: 4px;
+    text-align: left;
   }
 }
