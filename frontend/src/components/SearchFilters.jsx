@@ -10,7 +10,7 @@ function SearchFilters({ filters, onFilterChange, onClearFilters }) {
   const getCategoryKey = (category) => {
     const keyMap = {
       'AI': 'ai',
-      'Cloud Storage': 'cloud',
+      'Cloud': 'cloud',
       'Education': 'education',
       'Entertainment': 'entertainment',
       'Fitness': 'fitness',

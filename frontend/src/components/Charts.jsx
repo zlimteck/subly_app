@@ -33,9 +33,18 @@ function Charts({ subscriptions, stats }) {
     return () => clearTimeout(timer)
   }, [theme])
 
+  // Helper to normalize category names for translation
+  const normalizeCategoryKey = (category) => {
+    // Handle old "Cloud Storage" category name
+    if (category.toLowerCase() === 'cloud storage') {
+      return 'cloud'
+    }
+    return category.toLowerCase()
+  }
+
   // Prepare data for pie chart (by category)
   const categoryData = Object.entries(stats.byCategory).map(([name, value]) => ({
-    name: t(`categories.${name.toLowerCase()}`),
+    name: t(`categories.${normalizeCategoryKey(name)}`),
     value: Math.round(value * 100) / 100
   }))
 
