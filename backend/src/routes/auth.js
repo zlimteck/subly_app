@@ -109,6 +109,8 @@ router.post('/register', registerLimiter, [
         emailVerified: user.emailVerified,
         emailNotifications: user.emailNotifications,
         role: user.role,
+        monthlyRevenue: user.monthlyRevenue,
+        annualRevenue: user.annualRevenue,
         token: generateToken(user._id)
       });
     } else {
@@ -148,6 +150,8 @@ router.post('/login', authLimiter, [
         emailVerified: user.emailVerified,
         emailNotifications: user.emailNotifications,
         role: user.role,
+        monthlyRevenue: user.monthlyRevenue,
+        annualRevenue: user.annualRevenue,
         token: generateToken(user._id)
       });
     } else {
