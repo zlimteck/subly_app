@@ -1,4 +1,4 @@
-import { format, differenceInDays } from 'date-fns'
+import { format, differenceInDays, startOfDay } from 'date-fns'
 import { fr, enUS } from 'date-fns/locale'
 import { Edit2, Calendar, DollarSign, ExternalLink, LayoutGrid, List, Clock, ArrowUpDown, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -53,7 +53,7 @@ function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onTogg
       <div className={`subscription-grid ${viewMode === 'compact' ? 'compact-mode' : ''}`}>
         {subscriptions.map((sub) => {
           const trialDaysLeft = sub.isTrial && sub.trialEndDate
-            ? differenceInDays(new Date(sub.trialEndDate), new Date())
+            ? differenceInDays(startOfDay(new Date(sub.trialEndDate)), startOfDay(new Date()))
             : null
           const isTrialEndingSoon = trialDaysLeft !== null && trialDaysLeft >= 0 && trialDaysLeft <= 3
 

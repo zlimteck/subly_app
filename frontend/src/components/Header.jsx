@@ -4,7 +4,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LogOut, User, DollarSign, Euro, Bell } from 'lucide-react'
-import { differenceInDays, parseISO } from 'date-fns'
+import { differenceInDays, parseISO, startOfDay } from 'date-fns'
 import NotificationPanel from './NotificationPanel'
 import './Header.css'
 
@@ -22,10 +22,10 @@ function Header({ user, subscriptions = [] }) {
 
   // Get count of upcoming payments in the next 7 days
   const getUpcomingCount = () => {
-    const today = new Date()
+    const today = startOfDay(new Date())
     return subscriptions.filter(sub => {
       if (!sub.isActive) return false
-      const billingDate = parseISO(sub.nextBillingDate)
+      const billingDate = startOfDay(parseISO(sub.nextBillingDate))
       const daysUntil = differenceInDays(billingDate, today)
       return daysUntil >= 0 && daysUntil <= 7
     }).length

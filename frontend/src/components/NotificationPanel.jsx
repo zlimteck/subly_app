@@ -1,5 +1,5 @@
 import { Bell, Calendar, DollarSign, Clock } from 'lucide-react'
-import { format, differenceInDays, parseISO } from 'date-fns'
+import { format, differenceInDays, parseISO, startOfDay } from 'date-fns'
 import { fr, enUS } from 'date-fns/locale'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
@@ -12,12 +12,12 @@ function NotificationPanel({ subscriptions, onClose }) {
 
   // Get upcoming subscriptions in the next 7 days
   const getUpcomingSubscriptions = () => {
-    const today = new Date()
+    const today = startOfDay(new Date())
 
     return subscriptions
       .filter(sub => {
         if (!sub.isActive || sub.isTrial) return false // Exclude trials
-        const billingDate = parseISO(sub.nextBillingDate)
+        const billingDate = startOfDay(parseISO(sub.nextBillingDate))
         const daysUntil = differenceInDays(billingDate, today)
         return daysUntil >= 0 && daysUntil <= 7
       })
@@ -30,12 +30,12 @@ function NotificationPanel({ subscriptions, onClose }) {
 
   // Get trials ending in the next 7 days
   const getEndingTrials = () => {
-    const today = new Date()
+    const today = startOfDay(new Date())
 
     return subscriptions
       .filter(sub => {
         if (!sub.isActive || !sub.isTrial || !sub.trialEndDate) return false
-        const trialEndDate = parseISO(sub.trialEndDate)
+        const trialEndDate = startOfDay(parseISO(sub.trialEndDate))
         const daysUntil = differenceInDays(trialEndDate, today)
         return daysUntil >= 0 && daysUntil <= 7
       })
@@ -50,8 +50,9 @@ function NotificationPanel({ subscriptions, onClose }) {
   const endingTrials = getEndingTrials()
 
   const getDaysUntilText = (date) => {
-    const billingDate = parseISO(date)
-    const daysUntil = differenceInDays(billingDate, new Date())
+    const billingDate = startOfDay(parseISO(date))
+    const today = startOfDay(new Date())
+    const daysUntil = differenceInDays(billingDate, today)
 
     if (daysUntil === 0) return t('notifications.today')
     if (daysUntil === 1) return t('notifications.tomorrow')
@@ -84,7 +85,7 @@ function NotificationPanel({ subscriptions, onClose }) {
             </div>
             <div className="notification-list">
               {endingTrials.map(sub => {
-                const daysUntil = differenceInDays(parseISO(sub.trialEndDate), new Date())
+                const daysUntil = differenceInDays(startOfDay(parseISO(sub.trialEndDate)), startOfDay(new Date()))
                 const isEndingSoon = daysUntil >= 0 && daysUntil <= 3
 
                 return (
