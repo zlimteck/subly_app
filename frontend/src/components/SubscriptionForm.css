@@ -549,3 +549,154 @@
     margin-top: 8px;
   }
 }
+
+/* Sharing section styles */
+.btn-toggle-names {
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-toggle-names:hover {
+  border-color: var(--terminal-green);
+  color: var(--terminal-green);
+  background: var(--bg-tertiary);
+}
+
+.people-names {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 15px;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.name-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.person-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  min-width: 80px;
+  letter-spacing: 0.5px;
+}
+
+.name-input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  height: 40px;
+}
+
+.name-input-row input:focus {
+  border-color: var(--terminal-green);
+  box-shadow: 0 0 0 3px rgba(0, 255, 65, 0.1);
+  outline: none;
+}
+
+.paid-by-you-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--terminal-green);
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid var(--terminal-green);
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.share-summary-card {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--terminal-green);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.summary-row span:first-child {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.summary-row .amount {
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.summary-row.highlight {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.summary-row.highlight span:first-child {
+  color: var(--terminal-green);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.summary-row .amount-highlight {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--terminal-green);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+}
+
+@media (max-width: 768px) {
+  .name-input-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .person-number {
+    min-width: auto;
+  }
+
+  .paid-by-you-badge {
+    align-self: flex-start;
+  }
+}

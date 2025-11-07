@@ -30,7 +30,8 @@ function Dashboard() {
     search: '',
     category: 'All',
     status: 'all',
-    billingCycle: 'all'
+    billingCycle: 'all',
+    shared: 'all'
   })
   const [sortBy, setSortBy] = useState(() => {
     // Load from localStorage or default to 'name'
@@ -121,7 +122,8 @@ function Dashboard() {
       search: '',
       category: 'All',
       status: 'all',
-      billingCycle: 'all'
+      billingCycle: 'all',
+      shared: 'all'
     })
   }
 
@@ -153,6 +155,12 @@ function Dashboard() {
       // Billing cycle filter
       if (filters.billingCycle !== 'all' && sub.billingCycle !== filters.billingCycle) {
         return false
+      }
+
+      // Shared filter
+      if (filters.shared !== 'all') {
+        if (filters.shared === 'shared' && !sub.isShared) return false
+        if (filters.shared === 'notShared' && sub.isShared) return false
       }
 
       return true

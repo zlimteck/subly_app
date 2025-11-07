@@ -63,7 +63,24 @@ const subscriptionSchema = new mongoose.Schema({
     type: String,
     enum: ['card', 'paypal', 'crypto', 'bank', 'paysafecard', 'revolut', null],
     default: null
-  }
+  },
+  isShared: {
+    type: Boolean,
+    default: false
+  },
+  totalPeople: {
+    type: Number,
+    default: 1,
+    min: 1
+  },
+  peopleWhoPaid: {
+    type: Number,
+    default: 1,
+    min: 1
+  },
+  shareNames: [{
+    type: String
+  }]
 }, {
   timestamps: true
 });
@@ -74,6 +91,27 @@ subscriptionSchema.virtual('monthlyCost').get(function() {
     return this.amount / 12;
   }
   return this.amount;
+});
+
+// Virtual field to calculate cost per person
+subscriptionSchema.virtual('costPerPerson').get(function() {
+  if (!this.isShared) return this.amount;
+  return this.amount / this.totalPeople;
+});
+
+// Virtual field to calculate the real cost the user pays
+subscriptionSchema.virtual('myRealCost').get(function() {
+  if (!this.isShared) return this.amount;
+  return (this.amount / this.totalPeople) * this.peopleWhoPaid;
+});
+
+// Virtual field to calculate monthly cost based on real cost
+subscriptionSchema.virtual('myMonthlyCost').get(function() {
+  const realCost = this.isShared ? this.myRealCost : this.amount;
+  if (this.billingCycle === 'annual') {
+    return realCost / 12;
+  }
+  return realCost;
 });
 
 // Virtual field to check if trial is ending soon (within 3 days)

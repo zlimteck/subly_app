@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import axios from 'axios'
 import { useTranslation } from 'react-i18next'
+import { useCurrency } from '../context/CurrencyContext'
 import { getUploadUrl } from '../utils/api'
 import { CATEGORIES } from '../constants/categories'
 import { getBestLogoUrl } from '../config/serviceLogos'
@@ -9,6 +10,7 @@ import './SubscriptionForm.css'
 
 function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
   const { t } = useTranslation()
+  const { formatAmount, currency } = useCurrency()
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
@@ -22,8 +24,13 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
     iconUrl: '',
     iconFilename: '',
     isTrial: false,
-    trialEndDate: ''
+    trialEndDate: '',
+    isShared: false,
+    totalPeople: 2,
+    peopleWhoPaid: 1,
+    shareNames: []
   })
+  const [showNames, setShowNames] = useState(false)
   const [iconFile, setIconFile] = useState(null)
   const [iconPreview, setIconPreview] = useState(null)
   const [error, setError] = useState('')
@@ -49,7 +56,11 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
         iconUrl: initialData.iconUrl || '',
         iconFilename: initialData.iconFilename || '',
         isTrial: initialData.isTrial || false,
-        trialEndDate: initialData.trialEndDate ? format(new Date(initialData.trialEndDate), 'yyyy-MM-dd') : ''
+        trialEndDate: initialData.trialEndDate ? format(new Date(initialData.trialEndDate), 'yyyy-MM-dd') : '',
+        isShared: initialData.isShared || false,
+        totalPeople: initialData.totalPeople || 2,
+        peopleWhoPaid: initialData.peopleWhoPaid || 1,
+        shareNames: initialData.shareNames || []
       })
 
       // Set preview if there's an existing icon
@@ -218,6 +229,15 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
       setUseCustomLogo(true)
       setAutoDetectedLogo(null)
     }
+  }
+
+  const updatePersonName = (index, name) => {
+    const newShareNames = [...formData.shareNames]
+    newShareNames[index] = name
+    setFormData(prev => ({
+      ...prev,
+      shareNames: newShareNames
+    }))
   }
 
   const handleSubmit = async (e) => {
@@ -410,7 +430,117 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
               <option value="revolut">{t('paymentMethods.revolut')}</option>
             </select>
           </div>
+
+          <div className="form-group checkbox-group">
+            <label>
+              <span className="terminal-prompt">&gt;</span> {t('subscription.shared').toUpperCase()}
+            </label>
+            <label htmlFor="isShared" className="checkbox-inline">
+              <input
+                id="isShared"
+                name="isShared"
+                type="checkbox"
+                checked={formData.isShared}
+                onChange={handleChange}
+              />
+              <span>{t('subscription.sharedWith').toUpperCase()}</span>
+            </label>
+          </div>
         </div>
+
+        {formData.isShared && (
+          <>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="totalPeople">
+                  <span className="terminal-prompt">&gt;</span> {t('subscription.totalPeople').toUpperCase()}
+                </label>
+                <select
+                  id="totalPeople"
+                  name="totalPeople"
+                  value={formData.totalPeople}
+                  onChange={handleChange}
+                >
+                  {[2, 3, 4, 5, 6, 7, 8].map(num => (
+                    <option key={num} value={num}>
+                      {num} {t('common.people')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="peopleWhoPaid">
+                  <span className="terminal-prompt">&gt;</span> {t('subscription.iPay').toUpperCase()}
+                </label>
+                <select
+                  id="peopleWhoPaid"
+                  name="peopleWhoPaid"
+                  value={formData.peopleWhoPaid}
+                  onChange={handleChange}
+                >
+                  {Array.from({ length: formData.totalPeople }, (_, i) => i + 1).map(num => {
+                    const shareAmount = formData.amount ? ((parseFloat(formData.amount) / formData.totalPeople) * num) : 0
+                    return (
+                      <option key={num} value={num}>
+                        {num} {num === 1 ? t('common.share') : t('common.shares')}
+                        {formData.amount && ` (${formatAmount(shareAmount)})`}
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <button
+                type="button"
+                onClick={() => setShowNames(!showNames)}
+                className="btn-toggle-names"
+              >
+                {showNames ? '▼' : '▶'} {t('subscription.nameThePeople')} ({t('common.optional')})
+              </button>
+
+              {showNames && (
+                <div className="people-names">
+                  {Array.from({ length: formData.totalPeople }).map((_, index) => (
+                    <div key={index} className="name-input-row">
+                      <span className="person-number">{t('common.person')} {index + 1}:</span>
+                      <input
+                        type="text"
+                        placeholder={t('subscription.personName')}
+                        value={formData.shareNames[index] || ''}
+                        onChange={(e) => updatePersonName(index, e.target.value)}
+                      />
+                      {index < formData.peopleWhoPaid && (
+                        <span className="paid-by-you-badge">✓ {t('subscription.paidByYou')}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="share-summary-card">
+              <div className="summary-row">
+                <span>{t('subscription.totalCost')}:</span>
+                <span className="amount">{formData.amount ? formatAmount(parseFloat(formData.amount)) : '0.00'}</span>
+              </div>
+              <div className="summary-row">
+                <span>{t('subscription.costPerPerson')}:</span>
+                <span className="amount">
+                  {formData.amount ? formatAmount(parseFloat(formData.amount) / formData.totalPeople) : '0.00'}
+                </span>
+              </div>
+              <div className="summary-row highlight">
+                <span>{t('subscription.youPay')}:</span>
+                <span className="amount-highlight">
+                  {formData.amount ? formatAmount((parseFloat(formData.amount) / formData.totalPeople) * formData.peopleWhoPaid) : '0.00'}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="form-row">
           <div className="form-group">

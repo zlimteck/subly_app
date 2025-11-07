@@ -121,7 +121,21 @@
     "switchToAutoLogo": "Passer au logo automatique depuis l'URL",
     "customLogo": "Logo personnalisé",
     "paymentMethod": "Moyen de paiement",
-    "selectPaymentMethod": "Sélectionner un moyen de paiement (optionnel)..."
+    "selectPaymentMethod": "Sélectionner un moyen de paiement (optionnel)...",
+    "shared": "Partagé",
+    "sharedWith": "Partagé avec d'autres",
+    "sharingType": "Type de partage",
+    "sharedOnly": "Partagés uniquement",
+    "notShared": "Non partagés",
+    "totalPeople": "Nombre de personnes",
+    "iPay": "Je paie",
+    "nameThePeople": "Nommer les personnes",
+    "personName": "Nom de la personne",
+    "totalCost": "Coût total",
+    "costPerPerson": "Coût par personne",
+    "youPay": "Vous payez",
+    "paidByYou": "Payé par vous",
+    "sharingInfo": "Partage"
   },
   "paymentMethods": {
     "card": "Carte bancaire",
@@ -358,7 +372,12 @@
     "daysLeft": "restant(s)",
     "compact": "Compact",
     "extended": "Étendu",
-    "switchTo": "Passer en mode"
+    "switchTo": "Passer en mode",
+    "people": "personnes",
+    "person": "Personne",
+    "share": "part",
+    "shares": "parts",
+    "optional": "optionnel"
   },
   "calendar": {
     "title": "Calendrier des paiements",

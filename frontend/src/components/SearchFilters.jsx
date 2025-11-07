@@ -26,7 +26,7 @@ function SearchFilters({ filters, onFilterChange, onClearFilters }) {
     return keyMap[category] || category.toLowerCase()
   }
 
-  const hasActiveFilters = filters.search || filters.category !== 'All' || filters.status !== 'all' || filters.billingCycle !== 'all'
+  const hasActiveFilters = filters.search || filters.category !== 'All' || filters.status !== 'all' || filters.billingCycle !== 'all' || filters.shared !== 'all'
 
   return (
     <div className="search-filters">
@@ -94,6 +94,21 @@ function SearchFilters({ filters, onFilterChange, onClearFilters }) {
             <option value="all">{t('common.all')}</option>
             <option value="monthly">{t('subscription.monthly')}</option>
             <option value="annual">{t('subscription.annual')}</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label>
+            <span className="terminal-prompt">&gt;</span> {t('subscription.sharingType').toUpperCase()}
+          </label>
+          <select
+            value={filters.shared}
+            onChange={(e) => onFilterChange({ ...filters, shared: e.target.value })}
+            className="filter-select"
+          >
+            <option value="all">{t('common.all')}</option>
+            <option value="shared">{t('subscription.sharedOnly')}</option>
+            <option value="notShared">{t('subscription.notShared')}</option>
           </select>
         </div>
 

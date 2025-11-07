@@ -230,6 +230,13 @@
   overflow: hidden;
 }
 
+.badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .sub-name {
   font-size: 18px;
   font-weight: 700;
@@ -263,6 +270,47 @@
   border-color: color-mix(in srgb, var(--error) 40%, transparent);
   color: var(--error);
   animation: pulse-trial 2s ease infinite;
+}
+
+.shared-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: color-mix(in srgb, var(--terminal-green) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--terminal-green) 40%, transparent);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--terminal-green);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+[data-theme="dracula"] .shared-badge {
+  background: color-mix(in srgb, #bd93f9 15%, transparent);
+  border-color: color-mix(in srgb, #bd93f9 40%, transparent);
+  color: #bd93f9;
+}
+
+[data-theme="nord"] .shared-badge {
+  background: color-mix(in srgb, #88c0d0 15%, transparent);
+  border-color: color-mix(in srgb, #88c0d0 40%, transparent);
+  color: #88c0d0;
+}
+
+[data-theme="solarized"] .shared-badge {
+  background: color-mix(in srgb, #2aa198 15%, transparent);
+  border-color: color-mix(in srgb, #2aa198 40%, transparent);
+  color: #2aa198;
+}
+
+[data-theme="light"] .shared-badge {
+  background: color-mix(in srgb, #2563eb 15%, transparent);
+  border-color: color-mix(in srgb, #2563eb 40%, transparent);
+  color: #2563eb;
 }
 
 @keyframes pulse-trial {
@@ -367,12 +415,49 @@
   color: var(--text-secondary);
   font-weight: 600;
   margin-left: auto;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
 }
 
 .monthly-equivalent {
   padding-left: 24px;
   font-size: 13px;
   color: var(--text-dim);
+}
+
+.sharing-info {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.sharing-info svg {
+  color: var(--terminal-green);
+}
+
+.sharing-info .info-value {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+[data-theme="dracula"] .sharing-info svg {
+  color: #bd93f9;
+}
+
+[data-theme="nord"] .sharing-info svg {
+  color: #88c0d0;
+}
+
+[data-theme="solarized"] .sharing-info svg {
+  color: #2aa198;
+}
+
+[data-theme="light"] .sharing-info svg {
+  color: #2563eb;
 }
 
 .sub-category {
@@ -428,6 +513,12 @@
   text-align: right;
 }
 
+@media (max-width: 1024px) {
+  .info-value {
+    max-width: 55%;
+  }
+}
+
 @media (max-width: 768px) {
   .subscription-grid {
     grid-template-columns: 1fr;
@@ -450,6 +541,11 @@
     flex: 1 1 100%;
     margin-left: 24px;
     margin-top: 4px;
+    word-break: break-word;
+    max-width: 100%;
+    text-align: left;
+    overflow: visible;
+    text-overflow: initial;
   }
 
   .monthly-equivalent {
@@ -472,5 +568,11 @@
     margin-left: 24px;
     margin-top: 4px;
     text-align: left;
+  }
+
+  /* Better handling for sharing info on mobile */
+  .sharing-info .info-value {
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 }

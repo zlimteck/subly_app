@@ -1,6 +1,6 @@
 import { format, differenceInDays } from 'date-fns'
 import { fr, enUS } from 'date-fns/locale'
-import { Edit2, Calendar, DollarSign, ExternalLink, LayoutGrid, List, Clock, ArrowUpDown } from 'lucide-react'
+import { Edit2, Calendar, DollarSign, ExternalLink, LayoutGrid, List, Clock, ArrowUpDown, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
 import { getUploadUrl } from '../utils/api'
@@ -73,11 +73,18 @@ function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onTogg
                     <h3 className="sub-name terminal-text">
                       {sub.name}
                     </h3>
-                    {sub.isTrial && trialDaysLeft !== null && trialDaysLeft >= 0 && (
-                      <span className={`trial-badge ${isTrialEndingSoon ? 'ending-soon' : ''}`}>
-                        <Clock size={12} /> Trial {trialDaysLeft}d
-                      </span>
-                    )}
+                    <div className="badge-row">
+                      {sub.isTrial && trialDaysLeft !== null && trialDaysLeft >= 0 && (
+                        <span className={`trial-badge ${isTrialEndingSoon ? 'ending-soon' : ''}`}>
+                          <Clock size={12} /> Trial {trialDaysLeft}d
+                        </span>
+                      )}
+                      {sub.isShared && (
+                        <span className="shared-badge">
+                          <Users size={12} /> {t('subscription.shared')}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               <div className="sub-actions">
@@ -121,10 +128,37 @@ function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onTogg
                     </span>
                   </div>
 
+                  {sub.isShared && (
+                    <>
+                      <div className="info-row sharing-info">
+                        <Users size={16} />
+                        <span className="info-label">{t('subscription.youPay')}:</span>
+                        <span className="info-value">
+                          {formatAmount(sub.myRealCost)} / {sub.totalPeople} {t('common.people')}
+                        </span>
+                      </div>
+                      {sub.shareNames && sub.shareNames.some(name => name && name.trim()) && (
+                        <div className="info-row">
+                          <Users size={16} />
+                          <span className="info-label">{t('common.people')}:</span>
+                          <span className="info-value">
+                            {(() => {
+                              const validNames = sub.shareNames.filter(name => name && name.trim());
+                              if (validNames.length <= 3) {
+                                return validNames.join(', ');
+                              }
+                              return `${validNames.slice(0, 3).join(', ')} +${validNames.length - 3}`;
+                            })()}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+
                   {sub.billingCycle === 'annual' && (
                     <div className="info-row monthly-equivalent">
                       <span className="info-label">{t('subscription.monthly')}:</span>
-                      <span className="info-value">{formatAmount(sub.monthlyCost)}/{t('common.mo')}</span>
+                      <span className="info-value">{formatAmount(sub.isShared ? sub.myMonthlyCost : sub.monthlyCost)}/{t('common.mo')}</span>
                     </div>
                   )}
 

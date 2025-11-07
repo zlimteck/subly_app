@@ -35,22 +35,25 @@ router.get('/stats', async (req, res) => {
     let totalMonthlyOnly = 0; // Only pure monthly subscriptions
 
     subscriptions.forEach(sub => {
+      // Use real cost (considering sharing)
+      const realCost = sub.isShared ? sub.myRealCost : sub.amount;
+
       if (sub.billingCycle === 'monthly') {
-        totalMonthly += sub.amount;
-        totalMonthlyOnly += sub.amount;
+        totalMonthly += realCost;
+        totalMonthlyOnly += realCost;
       } else {
-        totalAnnual += sub.amount;
-        totalMonthly += sub.amount / 12; // Add monthly equivalent
+        totalAnnual += realCost;
+        totalMonthly += realCost / 12; // Add monthly equivalent
       }
     });
 
-    // Group by category
+    // Group by category (using real monthly cost)
     const byCategory = subscriptions.reduce((acc, sub) => {
       const category = sub.category || 'Other';
       if (!acc[category]) {
         acc[category] = 0;
       }
-      acc[category] += sub.monthlyCost;
+      acc[category] += sub.myMonthlyCost;
       return acc;
     }, {});
 

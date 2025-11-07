@@ -121,7 +121,21 @@
     "switchToAutoLogo": "Switch to automatic logo from URL",
     "customLogo": "Custom logo",
     "paymentMethod": "Payment Method",
-    "selectPaymentMethod": "Select payment method (optional)..."
+    "selectPaymentMethod": "Select payment method (optional)...",
+    "shared": "Shared",
+    "sharedWith": "Shared with others",
+    "sharingType": "Sharing Type",
+    "sharedOnly": "Shared only",
+    "notShared": "Not shared",
+    "totalPeople": "Total people",
+    "iPay": "I pay",
+    "nameThePeople": "Name the people",
+    "personName": "Person name",
+    "totalCost": "Total cost",
+    "costPerPerson": "Cost per person",
+    "youPay": "You pay",
+    "paidByYou": "Paid by you",
+    "sharingInfo": "Sharing"
   },
   "paymentMethods": {
     "card": "Credit/Debit Card",
@@ -358,7 +372,12 @@
     "daysLeft": "left",
     "compact": "Compact",
     "extended": "Extended",
-    "switchTo": "Switch to"
+    "switchTo": "Switch to",
+    "people": "people",
+    "person": "Person",
+    "share": "share",
+    "shares": "shares",
+    "optional": "optional"
   },
   "calendar": {
     "title": "Payment Calendar",
