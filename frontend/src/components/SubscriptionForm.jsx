@@ -70,10 +70,10 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
           setUseCustomLogo(false)
         }
       }
-
-      // Mark initial load as complete
-      setIsInitialLoad(false)
     }
+
+    // Mark initial load as complete (for both new and edit mode)
+    setIsInitialLoad(false)
   }, [initialData])
 
   // Auto-detect logo when URL changes (but not on initial load to preserve existing logos)
@@ -226,10 +226,16 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
     setLoading(true)
 
     try {
-      await onSubmit({
+      // Convert empty strings to null for optional fields
+      const submitData = {
         ...formData,
-        amount: parseFloat(formData.amount)
-      })
+        amount: parseFloat(formData.amount),
+        paymentMethod: formData.paymentMethod || null,
+        category: formData.category || null,
+        trialEndDate: formData.trialEndDate || null
+      }
+
+      await onSubmit(submitData)
     } catch (err) {
       setError(err.response?.data?.message || t('subscription.saveFailed'))
     } finally {

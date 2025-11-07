@@ -1,5 +1,7 @@
 # Subly - Subscription Expense Tracker
 
+![subly logo](https://zupimages.net/up/25/45/7734.png)
+
 A modern web application for tracking and managing your subscription expenses with automated reminders and comprehensive analytics.
 
 ## Features
@@ -123,6 +125,64 @@ node backend/scripts/promoteAdmin.js your-username
 ```
 
 Now you can access the admin panel from your profile menu!
+
+## Screenshots
+
+<details>
+<summary>Login Page</summary>
+
+![Login Page](https://zupimages.net/up/25/45/froy.png)
+
+</details>
+
+<details>
+<summary>Register Page</summary>
+
+![Register Page](https://zupimages.net/up/25/45/kghe.png)
+
+</details>
+
+<details>
+<summary>Dashboard - Terminal Dark Theme</summary>
+
+![Dashboard Terminal Dark](https://zupimages.net/up/25/45/8nq2.png)
+
+</details>
+
+<details>
+<summary>Dashboard - Dracula Theme</summary>
+
+![Dashboard Dracula](https://zupimages.net/up/25/45/9yxh.png)
+
+</details>
+
+<details>
+<summary>Dashboard - Nord Theme</summary>
+
+![Dashboard Nord](https://zupimages.net/up/25/45/wm0o.png)
+
+</details>
+
+<details>
+<summary>Dashboard - Light Mode</summary>
+
+![Dashboard Light](https://zupimages.net/up/25/45/7kg5.png)
+
+</details>
+
+<details>
+<summary>Dashboard - Solarized Dark</summary>
+
+![Dashboard Light](https://zupimages.net/up/25/45/zl5q.png)
+
+</details>
+
+<details>
+<summary>Profile Modal</summary>
+
+![Profile Modal](https://zupimages.net/up/25/45/9t0n.png)
+
+</details>
 
 ### Docker Deployment
 
