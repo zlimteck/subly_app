@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 import axios from 'axios'
 import Header from '../components/Header'
 import StatsCards from '../components/StatsCards'
@@ -11,11 +12,13 @@ import Calendar from '../components/Calendar'
 import SearchFilters from '../components/SearchFilters'
 import ProfileModal from '../components/ProfileModal'
 import ScrollToTop from '../components/ScrollToTop'
+import { updateBadge, clearBadge } from '../utils/badge'
 import './Dashboard.css'
 
 function Dashboard() {
   const { user } = useAuth()
   const { t } = useTranslation()
+  const location = useLocation()
   const [subscriptions, setSubscriptions] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -47,6 +50,30 @@ function Dashboard() {
     window.addEventListener('openProfile', handleOpenProfile)
     return () => window.removeEventListener('openProfile', handleOpenProfile)
   }, [])
+
+  // Handle PWA shortcuts - Détecte l'état openAddModal
+  useEffect(() => {
+    if (location.state?.openAddModal) {
+      setShowForm(true)
+      setEditingSub(null)
+
+      // Nettoie le state pour éviter de réouvrir au refresh
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
+
+  // Update app badge when subscriptions change
+  useEffect(() => {
+    updateBadge(subscriptions)
+
+    // Clear badge when user leaves the app
+    return () => {
+      // Only clear if navigating away from dashboard
+      if (!window.location.pathname.includes('dashboard')) {
+        clearBadge()
+      }
+    }
+  }, [subscriptions])
 
   useEffect(() => {
     // Save view mode to localStorage

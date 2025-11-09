@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react'
 import axios from 'axios'
+import i18n from '../i18n'
 
 const AuthContext = createContext(null)
 
@@ -14,6 +15,24 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Helper function to sync language with backend
+  const syncLanguageWithBackend = async (userData) => {
+    const frontendLanguage = i18n.language
+    const backendLanguage = userData?.language || 'en'
+
+    // If frontend language differs from backend, update backend
+    if (frontendLanguage !== backendLanguage) {
+      try {
+        await axios.put('/api/auth/push-preferences', {
+          language: frontendLanguage
+        })
+        console.log(`🌍 Language synced to backend: ${frontendLanguage}`)
+      } catch (error) {
+        console.error('Failed to sync language with backend:', error)
+      }
+    }
+  }
 
   useEffect(() => {
     // Check if user is logged in on mount
@@ -32,7 +51,11 @@ export const AuthProvider = ({ children }) => {
           // Token is valid (200 or 304), set user
           // For 304 responses, data might be empty but status is success
           if (response.status === 200 || response.status === 304) {
-            setUser(JSON.parse(userData))
+            const parsedUser = JSON.parse(userData)
+            setUser(parsedUser)
+
+            // Sync language with backend on mount
+            await syncLanguageWithBackend(parsedUser)
           }
         } catch (error) {
           // Token is invalid or expired, clear everything
@@ -61,6 +84,10 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
     setUser(userData)
+
+    // Sync language with backend after login
+    await syncLanguageWithBackend(userData)
+
     return response.data
   }
 
@@ -76,6 +103,9 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
     setUser(userData)
+
+    // Sync language with backend after registration
+    await syncLanguageWithBackend(userData)
 
     // Refresh user data from backend to ensure we have all fields
     try {

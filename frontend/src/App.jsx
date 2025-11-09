@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -8,6 +8,7 @@ import VerifyEmail from './pages/VerifyEmail'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CurrencyProvider } from './context/CurrencyContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { initializePushNotifications } from './utils/pushNotifications'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -44,12 +45,48 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/login" />
 }
 
+// PWA Action Handler - Gère les raccourcis PWA
+function PWAActionHandler() {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { user } = useAuth()
+
+  useEffect(() => {
+    const action = searchParams.get('action')
+
+    if (action === 'add' && user) {
+      // Redirige vers le dashboard avec un état pour ouvrir le modal
+      navigate('/dashboard', {
+        state: { openAddModal: true },
+        replace: true
+      })
+    }
+  }, [searchParams, navigate, user])
+
+  return null
+}
+
+// Redirect to dashboard while preserving query params
+function RootRedirect() {
+  const [searchParams] = useSearchParams()
+  const search = searchParams.toString()
+  const destination = search ? `/dashboard?${search}` : '/dashboard'
+
+  return <Navigate to={destination} replace />
+}
+
 function App() {
+  useEffect(() => {
+    // Initialize push notifications on app load
+    initializePushNotifications();
+  }, []);
+
   return (
     <AuthProvider>
       <ThemeProvider>
         <CurrencyProvider>
           <Router>
+            <PWAActionHandler />
             <div className="app">
               <Routes>
                 <Route path="/login" element={<Login />} />
@@ -71,7 +108,7 @@ function App() {
                     </PrivateRoute>
                   }
                 />
-                <Route path="/" element={<Navigate to="/dashboard" />} />
+                <Route path="/" element={<RootRedirect />} />
               </Routes>
             </div>
           </Router>

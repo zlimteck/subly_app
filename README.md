@@ -26,10 +26,13 @@ A modern web application for tracking and managing your subscription expenses wi
 - **Role-Based Access**: Admin and user roles with different permissions
 
 ### Notifications & Reminders
-- **Trial Reminders**: Automated email alerts at 3 days and 1 day before trial expiration
+- **Email Notifications**: Automated email alerts at 3 days and 1 day before trial expiration
+- **Web Push Notifications**: Browser push notifications for trial endings and payment reminders
+- **Multi-language Support**: Notifications in English and French based on user preference
+- **Configurable Reminders**: Choose to be reminded 1, 3, or 7 days before payment due
 - **Subscription Renewals**: Daily cron job checks and updates subscription billing dates
-- **Email Preferences**: User-controlled notification settings
-- **Beautiful Email Templates**: Terminal-themed HTML emails matching the app design
+- **User Preferences**: Granular control over notification types and timing
+- **Beautiful Templates**: Terminal-themed HTML emails and native browser notifications
 
 ## Quick Start
 
@@ -76,6 +79,29 @@ Optional email configuration (for trial/renewal notifications):
 # Resend API Configuration (OPTIONAL)
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
 EMAIL_FROM=noreply@yourdomain.com
+```
+
+Optional Web Push Notifications (browser notifications):
+```env
+# Web Push Notifications (OPTIONAL - not required for basic functionality)
+# Generate VAPID keys with: node backend/scripts/generateVapidKeys.js
+VAPID_PUBLIC_KEY=your_vapid_public_key_here
+VAPID_PRIVATE_KEY=your_vapid_private_key_here
+VAPID_SUBJECT=mailto:noreply@yourdomain.com
+```
+
+Optional Timezone Configuration (for cron jobs):
+```env
+# Timezone for cron jobs (OPTIONAL - defaults to UTC)
+# Examples: Europe/Paris, America/New_York, Asia/Tokyo, UTC See full list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+TZ=Europe/Paris
+```
+
+**Note:** VAPID keys are only needed if you want browser push notifications. The app works perfectly without them.
+
+To generate VAPID keys, run:
+```bash
+node backend/scripts/generateVapidKeys.js
 ```
 
 **4. Generate an invitation code**
@@ -199,6 +225,10 @@ docker run \
   -e JWT_SECRET="your-secret" \
   -e RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxx" \
   -e EMAIL_FROM="noreply@yourdomain.com" \
+  -e VAPID_PUBLIC_KEY="your_vapid_public_key" \
+  -e VAPID_PRIVATE_KEY="your_vapid_private_key" \
+  -e VAPID_SUBJECT="mailto:noreply@yourdomain.com" \
+  -e TZ="Europe/Paris" \
   -e FRONTEND_URL="https://yourdomain.com" \
   -p 3000:80 -p 5071:5071 \
   subly:prod
@@ -224,6 +254,10 @@ services:
       - FRONTEND_URL=your_frontend_url_here
       - RESEND_API_KEY=your_resend_api_key_here
       - EMAIL_FROM=noreply@yourdomain.com
+      - VAPID_PUBLIC_KEY=your_vapid_public_key_here
+      - VAPID_PRIVATE_KEY=your_vapid_private_key_here
+      - VAPID_SUBJECT=mailto:noreply@yourdomain.com
+      - TZ=Europe/Paris
     volumes:
       - /your/path/to/subly_app/backend/uploads:/app/uploads
     restart: unless-stopped
@@ -262,7 +296,8 @@ docker-compose up -d
 - MongoDB with Mongoose
 - JWT (authentication)
 - bcryptjs (password hashing)
-- Nodemailer (email sending)
+- Resend (email sending)
+- web-push (browser push notifications)
 - node-cron (scheduled tasks)
 - express-validator (validation)
 - express-rate-limit (rate limiting)
@@ -280,27 +315,32 @@ subly/
 │   │   ├── models/            # MongoDB schemas
 │   │   │   ├── User.js        # User model with email verification
 │   │   │   ├── Subscription.js # Subscription model with trials
-│   │   │   └── Invitation.js  # Invitation code system
+│   │   │   ├── Invitation.js  # Invitation code system
+│   │   │   └── PushSubscription.js # Web Push subscriptions
 │   │   ├── routes/            # API endpoints
 │   │   │   ├── auth.js        # Authentication & user management
 │   │   │   ├── subscriptions.js # Subscription CRUD
 │   │   │   ├── invitations.js # Admin invitation management
-│   │   │   └── upload.js      # File upload handling
+│   │   │   ├── upload.js      # File upload handling
+│   │   │   └── pushRoutes.js  # Push notification endpoints
 │   │   ├── services/          # Business logic
 │   │   │   ├── emailService.js # Email sending
 │   │   │   ├── subscriptionCron.js # Renewal automation
-│   │   │   └── trialReminderService.js # Trial notifications
+│   │   │   ├── trialReminderService.js # Trial notifications
+│   │   │   └── pushNotificationService.js # Push notifications
 │   │   ├── middleware/        # Express middleware
 │   │   │   └── auth.js        # JWT verification
 │   │   ├── config/            # Configuration
 │   │   │   ├── db.js          # MongoDB connection
 │   │   │   └── email.js       # Email setup
 │   │   ├── utils/             # Utilities
-│   │   │   └── emailTemplates.js # HTML email templates
+│   │   │   ├── emailTemplates.js # HTML email templates
+│   │   │   └── notificationTranslations.js # Push notification i18n
 │   │   └── server.js          # Entry point
 │   ├── scripts/               # Setup & utility scripts
 │   │   ├── generateInvite.js  # Generate invitation codes
-│   │   └── promoteAdmin.js    # Promote user to admin
+│   │   ├── promoteAdmin.js    # Promote user to admin
+│   │   └── generateVapidKeys.js # Generate VAPID keys for push
 │   ├── uploads/               # User-uploaded files
 │   └── Dockerfile
 ├── frontend/                   # React application
@@ -321,8 +361,14 @@ subly/
 │   │   │   ├── AuthContext.jsx # Authentication state
 │   │   │   ├── ThemeContext.jsx # Dark/Light theme
 │   │   │   └── CurrencyContext.jsx # Currency settings
+│   │   ├── utils/             # Utilities
+│   │   │   └── pushNotifications.js # Push notification helpers
 │   │   ├── App.jsx            # Main app component
 │   │   └── main.jsx           # Entry point
+│   ├── public/                # Static assets
+│   │   ├── sw.js              # Service Worker for push notifications
+│   │   ├── manifest.json      # PWA manifest
+│   │   └── icons/             # App icons
 │   └── Dockerfile
 ├── docker-compose.yml          # Docker orchestration
 ├── .env.example               # Environment template
@@ -331,12 +377,23 @@ subly/
 
 ## Key Features in Detail
 
-### Trial Reminder System
-- Automated email notifications at 3 days and 1 day before trial expiration
-- User-configurable notification preferences
+### Notification System
+
+**Email Notifications:**
+- Automated email alerts at 3 days and 1 day before trial expiration
+- Beautiful HTML email templates with urgency indicators
 - Cron job runs daily at 9:00 AM
 - Prevents duplicate notifications per day
-- Beautiful HTML email templates with urgency indicators
+
+**Web Push Notifications:**
+- Browser push notifications for trial endings and upcoming payments
+- Works on desktop and mobile (iOS 16.4+ PWA, Android, Chrome, Firefox, Edge)
+- Multi-language support (English/French) based on user preference
+- User-configurable reminder timing (1, 3, or 7 days before payment)
+- VAPID-based Web Push API for secure delivery
+- Service Worker implementation for offline capability
+- Automatic language synchronization with browser settings
+- Native notification support with custom icons
 
 ### Email Verification
 - SHA-256 token hashing for secure verification
@@ -361,8 +418,10 @@ subly/
 - User access control
 
 ### Automated Tasks
+All cron jobs run in the timezone specified by the `TZ` environment variable (defaults to UTC if not set):
 - **Daily at 00:00**: Check and update subscription renewal dates
-- **Daily at 09:00**: Send trial expiration reminders
+- **Daily at 09:00**: Send trial expiration reminders (email + push)
+- **Daily at 09:00**: Send payment reminders based on user preferences (push)
 - **On startup (dev)**: Initial checks after 5 seconds
 
 ## API Documentation
@@ -373,7 +432,8 @@ subly/
 - `GET /api/auth/me` - Get current user
 - `PUT /api/auth/password` - Change password
 - `PUT /api/auth/email` - Update email address
-- `PUT /api/auth/notifications` - Update notification preferences
+- `PUT /api/auth/notifications` - Update email notification preferences
+- `PUT /api/auth/push-preferences` - Update push notification preferences
 - `GET /api/auth/verify-email/:token` - Verify email
 - `POST /api/auth/resend-verification` - Resend verification email
 
@@ -389,6 +449,12 @@ subly/
 - `GET /api/invitations` - List all invitations
 - `DELETE /api/invitations/:id` - Delete invitation
 
+### Push Notification Endpoints
+- `GET /api/push/vapid-public-key` - Get VAPID public key for subscription
+- `POST /api/push/subscribe` - Subscribe to push notifications (protected)
+- `POST /api/push/unsubscribe` - Unsubscribe from push notifications (protected)
+- `GET /api/push/status` - Get user's push subscription status (protected)
+
 See [CLAUDE.md](./CLAUDE.md) for detailed architecture documentation.
 
 ## Environment Variables
@@ -402,6 +468,10 @@ See [CLAUDE.md](./CLAUDE.md) for detailed architecture documentation.
 | `FRONTEND_URL` | No | Frontend URL for CORS | `http://localhost:5173` |
 | `RESEND_API_KEY` | No | Resend API key for emails | `re_xxxxxxxxxxxxxxxxxxxx` |
 | `EMAIL_FROM` | No | Sender email address | `noreply@yourdomain.com` |
+| `VAPID_PUBLIC_KEY` | No | VAPID public key for Web Push | Generate with `node backend/scripts/generateVapidKeys.js` |
+| `VAPID_PRIVATE_KEY` | No | VAPID private key for Web Push | Generate with `node backend/scripts/generateVapidKeys.js` |
+| `VAPID_SUBJECT` | No | VAPID subject (mailto or URL) | `mailto:noreply@yourdomain.com` |
+| `TZ` | No | Timezone for cron jobs (IANA format) | `Europe/Paris`, `America/New_York`, `UTC` (default) |
 
 ## Security Features
 

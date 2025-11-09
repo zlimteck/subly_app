@@ -1,12 +1,12 @@
 import cron from 'node-cron';
 import Subscription from '../models/Subscription.js';
 
-/**
- * Updates subscription renewal dates that have passed
- * Runs daily at midnight (00:00)
- */
+// Updates subscription renewal dates that have passed runs daily at midnight (00:00)
 export const startSubscriptionCron = () => {
-  // Run every day at midnight
+  // Get timezone from environment variable (default: UTC)
+  const timezone = process.env.TZ || 'UTC';
+
+  // Run every day at midnight in the configured timezone
   cron.schedule('0 0 * * *', async () => {
     try {
       console.log('🔄 Running subscription renewal date update...');
@@ -56,7 +56,9 @@ export const startSubscriptionCron = () => {
     } catch (error) {
       console.error('❌ Error updating subscription renewal dates:', error);
     }
+  }, {
+    timezone
   });
 
-  console.log('⏰ Subscription renewal cron job started (runs daily at midnight)');
+  console.log(`⏰ Subscription renewal cron job started (runs daily at midnight ${timezone})`);
 };

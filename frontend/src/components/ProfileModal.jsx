@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { isPushSupported, getNotificationPermission, requestNotificationPermission, subscribeToPush, unsubscribeFromPush, checkSubscriptionStatus } from '../utils/pushNotifications';
 import './ProfileModal.css';
 
 const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
@@ -38,7 +39,17 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
   const [revenueError, setRevenueError] = useState('');
   const [revenueSuccess, setRevenueSuccess] = useState('');
 
-  // Sync emailData, emailNotifications, and revenue when user prop changes or modal opens
+  // Push notification states
+  const [pushEnabled, setPushEnabled] = useState(user?.pushNotificationsEnabled ?? true);
+  const [paymentReminderDays, setPaymentReminderDays] = useState(user?.paymentReminderDays || 3);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushPermission, setPushPermission] = useState('default');
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushError, setPushError] = useState('');
+  const [pushSuccess, setPushSuccess] = useState('');
+
+  // Sync emailData, emailNotifications, revenue, and push settings when user prop changes or modal opens
   useEffect(() => {
     if (isOpen && user) {
       setEmailData({ email: user.email || '' });
@@ -47,8 +58,27 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
         monthlyRevenue: user.monthlyRevenue || 0,
         annualRevenue: user.annualRevenue || 0
       });
+      setPushEnabled(user.pushNotificationsEnabled ?? true);
+      setPaymentReminderDays(user.paymentReminderDays || 3);
     }
-  }, [isOpen, user?.email, user?.emailNotifications, user?.monthlyRevenue, user?.annualRevenue]);
+  }, [isOpen, user]);
+
+  // Initialize push notification status
+  useEffect(() => {
+    const initPushStatus = async () => {
+      setPushSupported(isPushSupported());
+      setPushPermission(getNotificationPermission());
+
+      if (isPushSupported()) {
+        const subscribed = await checkSubscriptionStatus();
+        setIsSubscribed(subscribed);
+      }
+    };
+
+    if (isOpen) {
+      initPushStatus();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -177,6 +207,90 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
       }, 2000);
     } catch (err) {
       setRevenueError(err.response?.data?.message || t('profile.errorUpdatingRevenue'));
+    }
+  };
+
+  const handleEnablePushNotifications = async () => {
+    setPushLoading(true);
+    setPushError('');
+    setPushSuccess('');
+
+    try {
+      // Request permission
+      const permission = await requestNotificationPermission();
+      setPushPermission(permission);
+
+      if (permission === 'granted') {
+        // Subscribe to push
+        await subscribeToPush();
+        setIsSubscribed(true);
+
+        // Update backend preferences
+        await axios.put('/api/auth/push-preferences', {
+          pushNotificationsEnabled: true,
+          paymentReminderDays
+        });
+
+        await refreshUser();
+        setPushEnabled(true);
+        setPushSuccess(t('profile.pushNotificationsEnabled'));
+
+        setTimeout(() => setPushSuccess(''), 3000);
+      } else {
+        setPushError(t('profile.pushPermissionDenied'));
+      }
+    } catch (error) {
+      console.error('Failed to enable push notifications:', error);
+      setPushError(t('profile.errorEnablingPush'));
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleDisablePushNotifications = async () => {
+    setPushLoading(true);
+    setPushError('');
+    setPushSuccess('');
+
+    try {
+      // Unsubscribe from push
+      await unsubscribeFromPush();
+      setIsSubscribed(false);
+
+      // Update backend preferences
+      await axios.put('/api/auth/push-preferences', {
+        pushNotificationsEnabled: false,
+        paymentReminderDays
+      });
+
+      await refreshUser();
+      setPushEnabled(false);
+      setPushSuccess(t('profile.pushNotificationsDisabled'));
+
+      setTimeout(() => setPushSuccess(''), 3000);
+    } catch (error) {
+      console.error('Failed to disable push notifications:', error);
+      setPushError(t('profile.errorDisablingPush'));
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handlePaymentReminderDaysChange = async (days) => {
+    setPaymentReminderDays(days);
+
+    try {
+      await axios.put('/api/auth/push-preferences', {
+        pushNotificationsEnabled: pushEnabled,
+        paymentReminderDays: days
+      });
+
+      await refreshUser();
+      setPushSuccess(t('profile.reminderDaysUpdated'));
+      setTimeout(() => setPushSuccess(''), 2000);
+    } catch (error) {
+      console.error('Failed to update reminder days:', error);
+      setPushError(t('profile.errorUpdatingReminderDays'));
     }
   };
 
@@ -436,9 +550,20 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
                 <Languages size={16} />
                 <select
                   value={i18n.language}
-                  onChange={(e) => {
-                    i18n.changeLanguage(e.target.value);
-                    localStorage.setItem('language', e.target.value);
+                  onChange={async (e) => {
+                    const newLanguage = e.target.value;
+                    i18n.changeLanguage(newLanguage);
+                    localStorage.setItem('language', newLanguage);
+
+                    // Save language preference to backend
+                    try {
+                      await axios.put('/api/auth/push-preferences', {
+                        language: newLanguage
+                      });
+                      await refreshUser();
+                    } catch (error) {
+                      console.error('Failed to update language preference:', error);
+                    }
                   }}
                   className="theme-select"
                 >
@@ -516,23 +641,25 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
                 </div>
 
                 {/* Email Notifications Toggle */}
-                <div className="profile-notification-toggle">
-                  <div className="notification-toggle-header">
-                    <Bell size={18} />
-                    <span className="notification-toggle-label">{t('profile.emailNotifications')}</span>
+                <div>
+                  <div className="profile-notification-toggle">
+                    <div className="notification-toggle-header">
+                      <Bell size={18} />
+                      <span className="notification-toggle-label">{t('profile.emailNotifications')}</span>
+                    </div>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={emailNotifications}
+                        onChange={handleNotificationToggle}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
                   </div>
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={emailNotifications}
-                      onChange={handleNotificationToggle}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
+                  <p className="notification-description">
+                    {t('profile.notificationDescription')}
+                  </p>
                 </div>
-                <p className="notification-description">
-                  {t('profile.notificationDescription')}
-                </p>
               </div>
             ) : (
               <form onSubmit={handleEmailUpdate} className="profile-password-form">
@@ -579,6 +706,87 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
                   </button>
                 </div>
               </form>
+            )}
+          </div>
+
+          {/* Push Notifications Section */}
+          <div className="profile-section">
+            <div className="profile-section-header">
+              <Bell size={20} />
+              <h3 className="profile-section-title">&gt; {t('profile.pushNotifications')}</h3>
+            </div>
+            <p className="profile-section-description">
+              {t('profile.pushNotificationsDescription')}
+            </p>
+
+            {pushError && (
+              <div className="profile-alert-error">
+                {pushError}
+              </div>
+            )}
+            {pushSuccess && (
+              <div className="profile-alert-success">
+                {pushSuccess}
+              </div>
+            )}
+
+            {!pushSupported ? (
+              <div className="profile-alert-error">
+                {t('profile.browserNotSupported')}
+              </div>
+            ) : (
+              <div className="profile-push-controls">
+                {/* Push Notifications Toggle */}
+                <div className="profile-notification-toggle">
+                  <div className="notification-toggle-header">
+                    <Bell size={18} />
+                    <span className="notification-toggle-label">{t('profile.pushNotifications')}</span>
+                  </div>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={isSubscribed}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          handleEnablePushNotifications();
+                        } else {
+                          handleDisablePushNotifications();
+                        }
+                      }}
+                      disabled={pushLoading}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
+
+                {/* Permission Status Info */}
+                {pushPermission === 'denied' && (
+                  <div className="profile-alert-error">
+                    {t('profile.pushPermissionDenied')}
+                  </div>
+                )}
+
+                {/* Payment Reminder Days Selector */}
+                {isSubscribed && (
+                  <div className="profile-reminder-days">
+                    <label className="profile-form-label">
+                      {t('profile.paymentReminderDays')}
+                    </label>
+                    <div className="theme-dropdown" style={{ maxWidth: '200px', marginTop: '8px' }}>
+                      <Calendar size={16} />
+                      <select
+                        value={paymentReminderDays}
+                        onChange={(e) => handlePaymentReminderDaysChange(Number(e.target.value))}
+                        className="theme-select"
+                      >
+                        <option value={1}>{t('profile.reminderDays1')}</option>
+                        <option value={3}>{t('profile.reminderDays3')}</option>
+                        <option value={7}>{t('profile.reminderDays7')}</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

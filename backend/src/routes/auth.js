@@ -108,6 +108,9 @@ router.post('/register', registerLimiter, [
         email: user.email,
         emailVerified: user.emailVerified,
         emailNotifications: user.emailNotifications,
+        pushNotificationsEnabled: user.pushNotificationsEnabled,
+        paymentReminderDays: user.paymentReminderDays,
+        language: user.language,
         role: user.role,
         monthlyRevenue: user.monthlyRevenue,
         annualRevenue: user.annualRevenue,
@@ -149,6 +152,9 @@ router.post('/login', authLimiter, [
         email: user.email,
         emailVerified: user.emailVerified,
         emailNotifications: user.emailNotifications,
+        pushNotificationsEnabled: user.pushNotificationsEnabled,
+        paymentReminderDays: user.paymentReminderDays,
+        language: user.language,
         role: user.role,
         monthlyRevenue: user.monthlyRevenue,
         annualRevenue: user.annualRevenue,
@@ -170,6 +176,9 @@ router.get('/me', protect, async (req, res) => {
     email: req.user.email,
     emailVerified: req.user.emailVerified,
     emailNotifications: req.user.emailNotifications,
+    pushNotificationsEnabled: req.user.pushNotificationsEnabled,
+    paymentReminderDays: req.user.paymentReminderDays,
+    language: req.user.language,
     role: req.user.role,
     monthlyRevenue: req.user.monthlyRevenue,
     annualRevenue: req.user.annualRevenue,
@@ -393,6 +402,51 @@ router.put('/revenue', [
       message: 'Revenue updated successfully',
       monthlyRevenue: user.monthlyRevenue,
       annualRevenue: user.annualRevenue
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// @route   PUT /api/auth/push-preferences
+router.put('/push-preferences', [
+  protect,
+  body('pushNotificationsEnabled').optional().isBoolean().withMessage('pushNotificationsEnabled must be a boolean'),
+  body('paymentReminderDays').optional().isIn([1, 3, 7]).withMessage('paymentReminderDays must be 1, 3, or 7'),
+  body('language').optional().isIn(['en', 'fr']).withMessage('language must be en or fr')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { pushNotificationsEnabled, paymentReminderDays, language } = req.body;
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update push notification preferences if provided
+    if (pushNotificationsEnabled !== undefined) {
+      user.pushNotificationsEnabled = pushNotificationsEnabled;
+    }
+    if (paymentReminderDays !== undefined) {
+      user.paymentReminderDays = paymentReminderDays;
+    }
+    if (language !== undefined) {
+      user.language = language;
+    }
+
+    await user.save();
+
+    res.json({
+      message: 'Push notification preferences updated successfully',
+      pushNotificationsEnabled: user.pushNotificationsEnabled,
+      paymentReminderDays: user.paymentReminderDays,
+      language: user.language
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

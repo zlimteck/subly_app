@@ -61,6 +61,20 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: 0
+  },
+  pushNotificationsEnabled: {
+    type: Boolean,
+    default: true
+  },
+  paymentReminderDays: {
+    type: Number,
+    enum: [1, 3, 7],
+    default: 3
+  },
+  language: {
+    type: String,
+    enum: ['en', 'fr'],
+    default: 'en'
   }
 }, {
   timestamps: true

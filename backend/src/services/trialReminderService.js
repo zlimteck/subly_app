@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import Subscription from '../models/Subscription.js';
 import User from '../models/User.js';
 import { sendTrialReminderEmail } from './emailService.js';
+import { sendTrialEndingNotification } from './pushNotificationService.js';
 
 // Track which subscriptions have been notified (reset daily)
 const notifiedToday = new Set();
@@ -50,9 +51,19 @@ export const checkTrialReminders = async () => {
         if (!notifiedToday.has(notificationKey)) {
           console.log(`📧 Sending trial reminder: ${subscription.name} (${daysLeft} days left) to ${subscription.user.email}`);
 
-          const result = await sendTrialReminderEmail(subscription.user, subscription, daysLeft);
+          // Send email notification if enabled
+          const emailResult = await sendTrialReminderEmail(subscription.user, subscription, daysLeft);
 
-          if (result.success) {
+          // Send push notification if enabled
+          let pushResult = { success: false };
+          if (subscription.user.pushNotificationsEnabled) {
+            pushResult = await sendTrialEndingNotification(subscription.user, subscription, daysLeft);
+            if (pushResult.success > 0) {
+              console.log(`🔔 Sent push notification for ${subscription.name}`);
+            }
+          }
+
+          if (emailResult.success || pushResult.success > 0) {
             notifiedToday.add(notificationKey);
             remindersCount++;
           }
@@ -70,21 +81,22 @@ export const checkTrialReminders = async () => {
   }
 };
 
-/**
- * Start the trial reminder cron job
- * Runs every day at 9:00 AM
- */
+// Start the trial reminder cron job runs every day at 9:00 AM
 export const startTrialReminderCron = () => {
-  // Schedule: Run every day at 9:00 AM
+  // Get timezone from environment variable (default: UTC)
+  const timezone = process.env.TZ || 'UTC';
+
+  // Schedule: Run every day at 9:00 AM in the configured timezone
   // Format: second minute hour day month weekday
   cron.schedule('0 9 * * *', async () => {
     console.log('⏰ Trial reminder cron job triggered');
     notifiedToday.clear(); // Reset daily notifications
     await checkTrialReminders();
+  }, {
+    timezone
   });
 
-  // Also check immediately on server start (for testing)
-  console.log('⏰ Trial reminder cron job started (runs daily at 9:00 AM)');
+  console.log(`⏰ Trial reminder cron job started (runs daily at 9:00 AM ${timezone})`);
 
   // Run once on startup for testing (optional, comment out in production)
   if (process.env.NODE_ENV === 'development') {

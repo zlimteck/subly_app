@@ -519,8 +519,8 @@
 .notification-description {
   font-size: 12px;
   color: var(--text-muted);
-  margin: 0;
-  padding: 0 12px;
+  margin: 8px 0 0 0;
+  padding: 0;
   line-height: 1.5;
 }
 
@@ -635,6 +635,24 @@
   background: var(--terminal-green);
 }
 
+/* Push Notifications Section */
+.profile-push-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-push-toggle {
+  display: flex;
+  gap: 12px;
+}
+
+.profile-reminder-days {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 @media (max-width: 768px) {
   .profile-modal-overlay {
     padding: 10px;
@@ -656,5 +674,9 @@
   .profile-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .profile-push-toggle {
+    flex-direction: column;
   }
 }

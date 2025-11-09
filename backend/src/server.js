@@ -9,8 +9,11 @@ import subscriptionRoutes from './routes/subscriptions.js';
 import uploadRoutes from './routes/upload.js';
 import invitationRoutes from './routes/invitations.js';
 import adminRoutes from './routes/admin.js';
+import pushRoutes from './routes/pushRoutes.js';
 import { startSubscriptionCron } from './services/subscriptionCron.js';
 import { startTrialReminderCron } from './services/trialReminderService.js';
+import { startPaymentReminderCron } from './services/paymentReminderService.js';
+import { initializePushService } from './services/pushNotificationService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,9 +31,13 @@ app.set('trust proxy', 1);
 // Connect to MongoDB
 connectDB();
 
+// Initialize push notification service
+initializePushService();
+
 // Start cron jobs
 startSubscriptionCron();
 startTrialReminderCron();
+startPaymentReminderCron();
 
 // Middleware - Allow multiple origins for development and production
 const frontendUrls = process.env.FRONTEND_URL
@@ -73,6 +80,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/invitations', invitationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/push', pushRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

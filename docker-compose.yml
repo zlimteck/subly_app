@@ -12,6 +12,10 @@ services:
         - JWT_SECRET=your_jwt_secret_here
         - FRONTEND_URL=your_frontend_url_here
         - RESEND_API_KEY=your_resend_api_key_here
+        - VAPID_PUBLIC_KEY=your_vapid_public_key_here
+        - VAPID_PRIVATE_KEY=your_vapid_private_key_here
+        - VAPID_SUBJECT=mailto:noreply@subly.app
+        - TZ=Europe/Paris
       volumes:
         - /your/path/to/subly/backend/uploads:/app/uploads
       restart: unless-stopped
