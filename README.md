@@ -18,6 +18,7 @@ A modern web application for tracking and managing your subscription expenses wi
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 - **Intuitive Forms**: Easy-to-use interfaces for adding and editing subscriptions
 - **Data Export**: Export your subscription data in JSON or CSV format
+- **Calendar Integration**: Subscribe to or download iCal calendar feed with automatic synchronization
 
 ### Security & Authentication
 - **Email Verification**: Secure account verification with automated emails
@@ -70,8 +71,9 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/subly
 # You can use: https://randomkeygen.com/
 JWT_SECRET=your-secure-random-string-here
 
-# Frontend URL for CORS (default is fine for dev)
+# Frontend and Backend URLs (default is fine for dev)
 FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:5071
 ```
 
 Optional email configuration (for trial/renewal notifications):
@@ -212,15 +214,15 @@ Now you can access the admin panel from your profile menu!
 
 ### Docker Deployment
 
-**Development with Docker Compose:**
-```bash
-docker-compose up --build
-```
+#### Option 1: Use Pre-built Image from Docker Hub (Recommended)
 
-**Production single container:**
+Pull and run the latest official image:
+
 ```bash
-docker build -f Dockerfile.prod -t subly:prod .
-docker run \
+docker pull zlimteck/subly:latest
+
+docker run -d \
+  --name subly \
   -e MONGODB_URI="your-uri" \
   -e JWT_SECRET="your-secret" \
   -e RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxx" \
@@ -230,52 +232,110 @@ docker run \
   -e VAPID_SUBJECT="mailto:noreply@yourdomain.com" \
   -e TZ="Europe/Paris" \
   -e FRONTEND_URL="https://yourdomain.com" \
+  -e BACKEND_URL="https://yourdomain.com" \
   -p 3000:80 -p 5071:5071 \
+  --restart unless-stopped \
+  zlimteck/subly:latest
+```
+
+Or use a specific version:
+```bash
+docker pull zlimteck/subly:1.2.2
+docker run -d --name subly [same options as above] zlimteck/subly:1.2.2
+```
+
+#### Option 2: Build from Source
+
+**Development with Docker Compose:**
+```bash
+docker-compose up --build
+```
+
+**Production single container:**
+```bash
+docker build -f Dockerfile.prod -t subly:prod .
+docker run -d \
+  --name subly \
+  -e MONGODB_URI="your-uri" \
+  -e JWT_SECRET="your-secret" \
+  -e RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxx" \
+  -e EMAIL_FROM="noreply@yourdomain.com" \
+  -e VAPID_PUBLIC_KEY="your_vapid_public_key" \
+  -e VAPID_PRIVATE_KEY="your_vapid_private_key" \
+  -e VAPID_SUBJECT="mailto:noreply@yourdomain.com" \
+  -e TZ="Europe/Paris" \
+  -e FRONTEND_URL="https://yourdomain.com" \
+  -e BACKEND_URL="https://yourdomain.com" \
+  -p 3000:80 -p 5071:5071 \
+  --restart unless-stopped \
   subly:prod
 ```
 
-### Docker Compose Production (Recommended for Unraid)
+### Docker Compose Production (Easiest for Self-Hosting)
 
-The repository includes a complete `docker-compose.yml` file at the root. Edit it with your configuration:
+The `docker-compose.yml` uses the pre-built Docker Hub image and includes:
+- **Subly application** (frontend + backend in one container)
+- **MongoDB 8.0** (local database with persistent volumes)
 
+#### Quick Start
+
+**1. Edit MongoDB credentials** in `docker-compose.yml` (lines 9-10):
 ```yaml
-services:
-  backend:
-    build:
-      context: /your/path/to/subly_app/backend
-      dockerfile: Dockerfile
-    ports:
-      - "5071:5071"
-    environment:
-      - NODE_ENV=production
-      - PORT=5071
-      - MONGODB_URI=your_mongodb_uri_here
-      - JWT_SECRET=your_jwt_secret_here
-      - FRONTEND_URL=your_frontend_url_here
-      - RESEND_API_KEY=your_resend_api_key_here
-      - EMAIL_FROM=noreply@yourdomain.com
-      - VAPID_PUBLIC_KEY=your_vapid_public_key_here
-      - VAPID_PRIVATE_KEY=your_vapid_private_key_here
-      - VAPID_SUBJECT=mailto:noreply@yourdomain.com
-      - TZ=Europe/Paris
-    volumes:
-      - /your/path/to/subly_app/backend/uploads:/app/uploads
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: /your/path/to/subly_app/frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=your_backend_url_here
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
+- MONGO_INITDB_ROOT_PASSWORD=change_this_password  # Change this!
 ```
 
-Then run:
+**2. Update the MongoDB URI** (line 32) with the same password:
+```yaml
+- MONGODB_URI=mongodb://subly_admin:change_this_password@mongodb:27017/subly?authSource=admin
+```
+
+**3. Configure required variables**:
+```yaml
+- JWT_SECRET=your_secure_random_string  # Generate at https://randomkeygen.com/
+```
+
+**4. Start everything**:
+```bash
+docker-compose up -d
+```
+
+**5. Access the application**:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5071
+
+The MongoDB data is persisted in Docker volumes (`mongodb_data` and `mongodb_config`).
+
+#### Using a Specific Version
+
+To use a specific version instead of `latest`, edit line 23:
+```yaml
+image: zlimteck/subly:1.3.0  # Replace with desired version
+```
+
+#### Using MongoDB Atlas Instead
+
+If you prefer MongoDB Atlas cloud:
+
+**1. Comment out the mongodb service** (lines 3-20):
+```yaml
+# mongodb:
+#   image: mongo:8.0
+#   ...
+```
+
+**2. Remove the depends_on** (lines 44-46):
+```yaml
+# depends_on:
+#   mongodb:
+#     condition: service_healthy
+```
+
+**3. Use your Atlas URI** (line 32):
+```yaml
+- MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/subly
+```
+
+**4. Start the stack**:
 ```bash
 docker-compose up -d
 ```
@@ -417,6 +477,14 @@ subly/
 - Multi-use invitation support
 - User access control
 
+### Calendar Integration
+- **iCal Calendar Feed**: Subscribe to your payment calendar in Apple Calendar, Google Calendar, or Outlook
+- **Automatic Synchronization**: Calendar updates automatically when you add or modify subscriptions
+- **Recurring Events**: Monthly and annual subscriptions appear as recurring events
+- **Smart Reminders**: Alarms based on your notification preferences (1, 3, or 7 days before)
+- **Manual Download**: Download a snapshot .ics file for one-time import
+- **Secure Token-based Access**: Each user gets a unique calendar URL
+
 ### Automated Tasks
 All cron jobs run in the timezone specified by the `TZ` environment variable (defaults to UTC if not set):
 - **Daily at 00:00**: Check and update subscription renewal dates
@@ -443,6 +511,9 @@ All cron jobs run in the timezone specified by the `TZ` environment variable (de
 - `POST /api/subscriptions` - Create subscription
 - `PUT /api/subscriptions/:id` - Update subscription
 - `DELETE /api/subscriptions/:id` - Delete subscription
+- `GET /api/subscriptions/calendar-token` - Generate calendar subscription URL (protected)
+- `GET /api/subscriptions/calendar/:token.ics` - Public iCal calendar feed (token-based)
+- `GET /api/subscriptions/calendar.ics` - Download calendar file (protected)
 
 ### Admin Endpoints
 - `POST /api/invitations` - Generate invitation code
@@ -465,7 +536,8 @@ See [CLAUDE.md](./CLAUDE.md) for detailed architecture documentation.
 | `NODE_ENV` | No | Environment mode | `development` or `production` |
 | `MONGODB_URI` | **Yes** | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/subly` |
 | `JWT_SECRET` | **Yes** | Secret for JWT tokens | Random secure string |
-| `FRONTEND_URL` | No | Frontend URL for CORS | `http://localhost:5173` |
+| `FRONTEND_URL` | No | Frontend URL for CORS and calendar links | `http://localhost:5173` |
+| `BACKEND_URL` | No | Backend URL for calendar subscription | `http://localhost:5071` |
 | `RESEND_API_KEY` | No | Resend API key for emails | `re_xxxxxxxxxxxxxxxxxxxx` |
 | `EMAIL_FROM` | No | Sender email address | `noreply@yourdomain.com` |
 | `VAPID_PUBLIC_KEY` | No | VAPID public key for Web Push | Generate with `node backend/scripts/generateVapidKeys.js` |

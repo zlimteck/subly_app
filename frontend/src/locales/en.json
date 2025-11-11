@@ -246,7 +246,15 @@
     "disablePushNotifications": "Disable Push Notifications",
     "reminderDays1": "1 day before",
     "reminderDays3": "3 days before",
-    "reminderDays7": "7 days before"
+    "reminderDays7": "7 days before",
+    "calendarSync": "Calendar Synchronization",
+    "calendarDescription": "Subscribe to your payment calendar or download it as a file. Your calendar will automatically update when you add or modify subscriptions.",
+    "downloadCalendar": "Download Calendar File",
+    "calendarUrl": "Calendar Subscription URL",
+    "generateCalendarUrl": "Generate Calendar URL",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "calendarUrlHint": "Use this URL to subscribe in Apple Calendar, Google Calendar, or Outlook. Your calendar will sync automatically."
   },
   "themes": {
     "dark": "Dark",

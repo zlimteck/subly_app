@@ -75,6 +75,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['en', 'fr'],
     default: 'en'
+  },
+  calendarToken: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  currency: {
+    type: String,
+    enum: ['EUR', 'USD'],
+    default: 'EUR'
+  },
+  theme: {
+    type: String,
+    enum: ['dark', 'light', 'dracula', 'nord', 'solarized'],
+    default: 'dark'
   }
 }, {
   timestamps: true
@@ -102,6 +117,14 @@ userSchema.methods.generateEmailVerificationToken = function() {
   this.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
   this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
   return token;
+};
+
+// Method to generate or get calendar token
+userSchema.methods.getCalendarToken = function() {
+  if (!this.calendarToken) {
+    this.calendarToken = crypto.randomBytes(32).toString('hex');
+  }
+  return this.calendarToken;
 };
 
 // Cascade delete subscriptions when user is deleted (hard delete)

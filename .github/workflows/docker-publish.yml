@@ -45,12 +45,3 @@ jobs:
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Docker Hub Description
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ secrets.DOCKERHUB_USERNAME }}/subly
-          short-description: "Subly - Subscription expense tracker with automated reminders"
-          readme-filepath: ./README.md

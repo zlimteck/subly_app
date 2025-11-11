@@ -82,9 +82,9 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <CurrencyProvider>
+    <ThemeProvider>
+      <CurrencyProvider>
+        <AuthProvider>
           <Router>
             <PWAActionHandler />
             <div className="app">
@@ -112,9 +112,9 @@ function App() {
               </Routes>
             </div>
           </Router>
-        </CurrencyProvider>
-      </ThemeProvider>
-    </AuthProvider>
+        </AuthProvider>
+      </CurrencyProvider>
+    </ThemeProvider>
   )
 }
 

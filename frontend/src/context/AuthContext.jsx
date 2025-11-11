@@ -1,6 +1,8 @@
 import { createContext, useState, useContext, useEffect } from 'react'
 import axios from 'axios'
 import i18n from '../i18n'
+import { useCurrency } from './CurrencyContext'
+import { useTheme } from './ThemeContext'
 
 const AuthContext = createContext(null)
 
@@ -15,6 +17,8 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { loadCurrencyFromUser } = useCurrency()
+  const { loadThemeFromUser } = useTheme()
 
   // Helper function to sync language with backend
   const syncLanguageWithBackend = async (userData) => {
@@ -31,6 +35,19 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Failed to sync language with backend:', error)
       }
+    }
+  }
+
+  // Helper function to load user preferences
+  const loadUserPreferences = (userData) => {
+    // Load currency preference
+    if (userData?.currency) {
+      loadCurrencyFromUser(userData.currency)
+    }
+
+    // Load theme preference
+    if (userData?.theme) {
+      loadThemeFromUser(userData.theme)
     }
   }
 
@@ -53,6 +70,9 @@ export const AuthProvider = ({ children }) => {
           if (response.status === 200 || response.status === 304) {
             const parsedUser = JSON.parse(userData)
             setUser(parsedUser)
+
+            // Load user preferences (currency, theme)
+            loadUserPreferences(parsedUser)
 
             // Sync language with backend on mount
             await syncLanguageWithBackend(parsedUser)
@@ -85,6 +105,9 @@ export const AuthProvider = ({ children }) => {
 
     setUser(userData)
 
+    // Load user preferences (currency, theme)
+    loadUserPreferences(userData)
+
     // Sync language with backend after login
     await syncLanguageWithBackend(userData)
 
@@ -103,6 +126,9 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
     setUser(userData)
+
+    // Load user preferences (currency, theme)
+    loadUserPreferences(userData)
 
     // Sync language with backend after registration
     await syncLanguageWithBackend(userData)
@@ -131,6 +157,10 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem('user', JSON.stringify(userData))
       setUser(userData)
+
+      // Load user preferences (currency, theme)
+      loadUserPreferences(userData)
+
       return userData
     } catch (error) {
       console.error('Error refreshing user data:', error)

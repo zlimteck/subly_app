@@ -1,18 +1,97 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Subscription from '../models/Subscription.js';
+import User from '../models/User.js';
 import { protect } from '../middleware/auth.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import ical from 'ical-generator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const router = express.Router();
 
-// All routes are protected
+// Public route for calendar subscription (must be before protect middleware)
+// @route   GET /api/subscriptions/calendar/:token.ics (public with token)
+router.get('/calendar/:token.ics', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Find user by calendar token
+    const user = await User.findOne({ calendarToken: token });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Calendar not found' });
+    }
+
+    const subscriptions = await Subscription.find({
+      user: user._id,
+      isActive: true
+    }).sort({ nextBillingDate: 1 });
+
+    // Create iCal calendar
+    const calendar = ical({
+      name: 'Subly - Subscription Payments',
+      prodId: {
+        company: 'Subly',
+        product: 'Subscription Tracker',
+        language: 'EN'
+      },
+      timezone: 'UTC'
+    });
+
+    // Add event for each subscription
+    subscriptions.forEach(sub => {
+      const amount = sub.isShared ? sub.myRealCost : sub.amount;
+      const currency = '€'; // TODO: get from user preferences
+
+      // Create recurring event
+      const event = calendar.createEvent({
+        start: new Date(sub.nextBillingDate),
+        summary: `${sub.name} - ${amount}${currency}`,
+        description: `Category: ${sub.category || 'Other'}\nAmount: ${amount}${currency}\nBilling cycle: ${sub.billingCycle}${sub.notes ? '\nNotes: ' + sub.notes : ''}`,
+        url: process.env.FRONTEND_URL,
+        location: 'Online',
+        allDay: true
+      });
+
+      // Set recurrence based on billing cycle
+      if (sub.billingCycle === 'monthly') {
+        event.repeating({
+          freq: 'MONTHLY',
+          interval: 1
+        });
+      } else if (sub.billingCycle === 'annual') {
+        event.repeating({
+          freq: 'YEARLY',
+          interval: 1
+        });
+      }
+
+      // Add reminder based on user preference (default 3 days before)
+      const reminderDays = user.paymentReminderDays || 3;
+      event.createAlarm({
+        type: 'display',
+        trigger: 60 * 60 * 24 * reminderDays * -1 // X days before in seconds
+      });
+    });
+
+    // Set response headers for iCal file
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline; filename="subly-subscriptions.ics"');
+
+    // Send iCal feed
+    res.send(calendar.toString());
+  } catch (error) {
+    console.error('Error generating iCal feed:', error);
+    res.status(500).json({ message: 'Server error generating calendar', error: error.message });
+  }
+});
+
+// All routes below are protected
 router.use(protect);
 
 // @route   GET /api/subscriptions
@@ -165,6 +244,97 @@ router.delete('/:id', async (req, res) => {
     res.json({ message: 'Subscription removed' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// @route   GET /api/subscriptions/calendar-token
+router.get('/calendar-token', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const token = user.getCalendarToken();
+    await user.save();
+
+    const backendUrl = process.env.BACKEND_URL;
+    if (!backendUrl) {
+      return res.status(500).json({ message: 'BACKEND_URL not configured in environment variables' });
+    }
+
+    const calendarUrl = `${backendUrl}/api/subscriptions/calendar/${token}.ics`;
+
+    res.json({
+      token,
+      calendarUrl
+    });
+  } catch (error) {
+    console.error('Error generating calendar token:', error);
+    res.status(500).json({ message: 'Server error generating calendar token', error: error.message });
+  }
+});
+
+// @route   GET /api/subscriptions/calendar.ics (download with JWT auth)
+router.get('/calendar.ics', protect, async (req, res) => {
+  try {
+    const subscriptions = await Subscription.find({
+      user: req.user._id,
+      isActive: true
+    }).sort({ nextBillingDate: 1 });
+
+    // Create iCal calendar
+    const calendar = ical({
+      name: 'Subly - Subscription Payments',
+      prodId: {
+        company: 'Subly',
+        product: 'Subscription Tracker',
+        language: 'EN'
+      },
+      timezone: 'UTC'
+    });
+
+    // Add event for each subscription
+    subscriptions.forEach(sub => {
+      const amount = sub.isShared ? sub.myRealCost : sub.amount;
+      const currency = '€'; // TODO: get from user preferences
+
+      // Create recurring event
+      const event = calendar.createEvent({
+        start: new Date(sub.nextBillingDate),
+        summary: `${sub.name} - ${amount}${currency}`,
+        description: `Category: ${sub.category || 'Other'}\nAmount: ${amount}${currency}\nBilling cycle: ${sub.billingCycle}${sub.notes ? '\nNotes: ' + sub.notes : ''}`,
+        url: process.env.FRONTEND_URL,
+        location: 'Online',
+        allDay: true
+      });
+
+      // Set recurrence based on billing cycle
+      if (sub.billingCycle === 'monthly') {
+        event.repeating({
+          freq: 'MONTHLY',
+          interval: 1
+        });
+      } else if (sub.billingCycle === 'annual') {
+        event.repeating({
+          freq: 'YEARLY',
+          interval: 1
+        });
+      }
+
+      // Add reminder based on user preference (default 3 days before)
+      const reminderDays = req.user.paymentReminderDays || 3;
+      event.createAlarm({
+        type: 'display',
+        trigger: 60 * 60 * 24 * reminderDays * -1 // X days before in seconds
+      });
+    });
+
+    // Set response headers for iCal file
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="subly-subscriptions.ics"');
+
+    // Send iCal feed
+    res.send(calendar.toString());
+  } catch (error) {
+    console.error('Error generating iCal feed:', error);
+    res.status(500).json({ message: 'Server error generating calendar', error: error.message });
   }
 });
 

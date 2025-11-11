@@ -1,11 +1,12 @@
 import { createContext, useState, useContext, useEffect } from 'react'
+import axios from 'axios'
 
 const CurrencyContext = createContext(null)
 
 export const useCurrency = () => {
   const context = useContext(CurrencyContext)
   if (!context) {
-    throw new Error('useAuth must be used within CurrencyProvider')
+    throw new Error('useCurrency must be used within CurrencyProvider')
   }
   return context
 }
@@ -17,9 +18,9 @@ const CURRENCIES = {
 
 export const CurrencyProvider = ({ children }) => {
   const [currency, setCurrency] = useState(() => {
-    // Load from localStorage or default to USD
+    // Load from localStorage or default to EUR
     const saved = localStorage.getItem('currency')
-    return saved || 'USD'
+    return saved || 'EUR'
   })
 
   useEffect(() => {
@@ -37,8 +38,34 @@ export const CurrencyProvider = ({ children }) => {
     return CURRENCIES[currency].symbol
   }
 
-  const toggleCurrency = () => {
-    setCurrency(prev => prev === 'USD' ? 'EUR' : 'USD')
+  const toggleCurrency = async () => {
+    const newCurrency = currency === 'USD' ? 'EUR' : 'USD'
+    setCurrency(newCurrency)
+
+    // Sync to backend if user is logged in
+    try {
+      const token = localStorage.getItem('token')
+      if (token) {
+        await axios.put('/api/auth/preferences', { currency: newCurrency })
+
+        // Update user data in localStorage to keep it in sync
+        const userData = localStorage.getItem('user')
+        if (userData) {
+          const parsedUser = JSON.parse(userData)
+          parsedUser.currency = newCurrency
+          localStorage.setItem('user', JSON.stringify(parsedUser))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to sync currency preference:', error)
+    }
+  }
+
+  const loadCurrencyFromUser = (userCurrency) => {
+    if (userCurrency && CURRENCIES[userCurrency]) {
+      setCurrency(userCurrency)
+      localStorage.setItem('currency', userCurrency)
+    }
   }
 
   return (
@@ -48,6 +75,7 @@ export const CurrencyProvider = ({ children }) => {
       formatAmount,
       getCurrencySymbol,
       toggleCurrency,
+      loadCurrencyFromUser,
       currencies: CURRENCIES
     }}>
       {children}

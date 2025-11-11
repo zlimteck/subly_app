@@ -1,33 +1,53 @@
 services:
-    backend:
-      build:
-        context: /your/path/to/subly/backend
-        dockerfile: Dockerfile
+    # MongoDB local database (optional - comment out if using MongoDB Atlas)
+    mongodb:
+      image: mongo:8.0
+      container_name: subly-mongodb
       ports:
-        - "5071:5071"
+        - "27017:27017"
+      environment:
+        - MONGO_INITDB_ROOT_USERNAME=subly_admin
+        - MONGO_INITDB_ROOT_PASSWORD=change_this_password
+        - MONGO_INITDB_DATABASE=subly
+      volumes:
+        - mongodb_data:/data/db
+        - mongodb_config:/data/configdb
+      restart: unless-stopped
+      healthcheck:
+        test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
+    subly:
+      image: zlimteck/subly:latest
+      container_name: subly-app
+      ports:
+        - "3000:80"      # Frontend
+        - "5071:5071"    # Backend API
       environment:
         - NODE_ENV=production
         - PORT=5071
-        - MONGODB_URI=your_mongodb_uri_here
+        # Use local MongoDB (comment out and use MongoDB Atlas URI if preferred)
+        - MONGODB_URI=mongodb://subly_admin:change_this_password@mongodb:27017/subly?authSource=admin
+        # Or use MongoDB Atlas (uncomment and comment local URI above)
+        # - MONGODB_URI=your_mongodb_atlas_uri_here
         - JWT_SECRET=your_jwt_secret_here
-        - FRONTEND_URL=your_frontend_url_here
+        - FRONTEND_URL=http://localhost:3000
+        - BACKEND_URL=http://localhost:5071
         - RESEND_API_KEY=your_resend_api_key_here
+        - EMAIL_FROM=noreply@yourdomain.com
         - VAPID_PUBLIC_KEY=your_vapid_public_key_here
         - VAPID_PRIVATE_KEY=your_vapid_private_key_here
-        - VAPID_SUBJECT=mailto:noreply@subly.app
+        - VAPID_SUBJECT=mailto:noreply@yourdomain.com
         - TZ=Europe/Paris
-      volumes:
-        - /your/path/to/subly/backend/uploads:/app/uploads
+      depends_on:
+        mongodb:
+          condition: service_healthy
       restart: unless-stopped
 
-    frontend:
-      build:
-        context: /your/path/to/subly/frontend
-        dockerfile: Dockerfile
-        args:
-          - VITE_API_URL=your_url_here
-      ports:
-        - "3000:80"
-      depends_on:
-        - backend
-      restart: unless-stopped
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local

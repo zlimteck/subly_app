@@ -18,15 +18,30 @@ async function generateInvitationCode(count = 1, expiresInDays = null, note = ''
 
     const codes = [];
 
-    for (let i = 0; i < count; i++) {
-      const invitation = new Invitation({
-        note: note || 'Generated via script'
-      });
+    // Check if this is the first invitation (bootstrap mode)
+    const invitationCount = await Invitation.countDocuments();
+    const isBootstrap = invitationCount === 0;
 
-      if (expiresInDays) {
-        invitation.expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+    if (isBootstrap) {
+      console.log('🔧 Bootstrap mode: Creating initial invitation without user reference\n');
+    }
+
+    for (let i = 0; i < count; i++) {
+      const invitationData = {
+        code: Invitation.generateCode(),
+        note: note || 'Generated via script'
+      };
+
+      // In bootstrap mode, use a system placeholder ID
+      if (isBootstrap) {
+        invitationData.createdBy = new mongoose.Types.ObjectId('000000000000000000000000');
       }
 
+      if (expiresInDays) {
+        invitationData.expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+      }
+
+      const invitation = new Invitation(invitationData);
       await invitation.save();
       codes.push(invitation.code);
     }

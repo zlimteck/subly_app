@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Download, Lock, User, Calendar, Sun, Moon, Mail, CheckCircle, AlertCircle, Shield, Send, Bell, Palette, Languages, DollarSign } from 'lucide-react';
+import { X, Download, Lock, User, Calendar, Sun, Moon, Mail, CheckCircle, AlertCircle, Shield, Send, Bell, Palette, Languages, DollarSign, Copy, Link } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
@@ -48,6 +48,11 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState('');
   const [pushSuccess, setPushSuccess] = useState('');
+
+  // Calendar subscription states
+  const [calendarUrl, setCalendarUrl] = useState('');
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarCopied, setCalendarCopied] = useState(false);
 
   // Sync emailData, emailNotifications, revenue, and push settings when user prop changes or modal opens
   useEffect(() => {
@@ -332,6 +337,44 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
     URL.revokeObjectURL(url);
   };
 
+  const downloadCalendar = async () => {
+    try {
+      const response = await axios.get('/api/subscriptions/calendar.ics', {
+        responseType: 'blob'
+      });
+
+      const blob = new Blob([response.data], { type: 'text/calendar' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'subly-subscriptions.ics';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download calendar:', error);
+      setEmailError(t('profile.error'));
+    }
+  };
+
+  const getCalendarUrl = async () => {
+    setCalendarLoading(true);
+    try {
+      const response = await axios.get('/api/subscriptions/calendar-token');
+      setCalendarUrl(response.data.calendarUrl);
+    } catch (error) {
+      console.error('Failed to get calendar URL:', error);
+      setEmailError(t('profile.error'));
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  const copyCalendarUrl = () => {
+    navigator.clipboard.writeText(calendarUrl);
+    setCalendarCopied(true);
+    setTimeout(() => setCalendarCopied(false), 2000);
+  };
+
   const accountAge = user?.createdAt
     ? Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24))
     : 0;
@@ -414,6 +457,62 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
               <button onClick={exportToCSV} className="profile-btn">
                 <Download size={16} />
                 {t('profile.exportCSV')}
+              </button>
+            </div>
+          </div>
+
+          {/* Calendar Subscription Section */}
+          <div className="profile-section">
+            <div className="profile-section-header">
+              <Calendar size={20} />
+              <h3 className="profile-section-title">&gt; {t('profile.calendarSync')}</h3>
+            </div>
+            <p className="profile-section-description">
+              {t('profile.calendarDescription')}
+            </p>
+
+            {/* Calendar Subscription URL */}
+            <div>
+              <label className="profile-form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Link size={16} />
+                {t('profile.calendarUrl')}
+              </label>
+              {!calendarUrl ? (
+                <button
+                  onClick={getCalendarUrl}
+                  className="profile-btn"
+                  disabled={calendarLoading}
+                >
+                  <Link size={16} />
+                  {calendarLoading ? t('common.loading') : t('profile.generateCalendarUrl')}
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    value={calendarUrl}
+                    readOnly
+                    className="profile-form-input"
+                    style={{ flex: 1, fontFamily: 'monospace', fontSize: '12px' }}
+                  />
+                  <button onClick={copyCalendarUrl} className="profile-btn">
+                    {calendarCopied ? <CheckCircle size={16} /> : <Copy size={16} />}
+                    {calendarCopied ? t('profile.copied') : t('profile.copy')}
+                  </button>
+                </div>
+              )}
+              {calendarUrl && (
+                <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '8px' }}>
+                  {t('profile.calendarUrlHint')}
+                </p>
+              )}
+            </div>
+
+            {/* Download Calendar Button */}
+            <div className="profile-export-buttons">
+              <button onClick={downloadCalendar} className="profile-btn">
+                <Download size={16} />
+                {t('profile.downloadCalendar')}
               </button>
             </div>
           </div>

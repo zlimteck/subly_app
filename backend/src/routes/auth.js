@@ -114,6 +114,8 @@ router.post('/register', registerLimiter, [
         role: user.role,
         monthlyRevenue: user.monthlyRevenue,
         annualRevenue: user.annualRevenue,
+        currency: user.currency,
+        theme: user.theme,
         token: generateToken(user._id)
       });
     } else {
@@ -158,6 +160,8 @@ router.post('/login', authLimiter, [
         role: user.role,
         monthlyRevenue: user.monthlyRevenue,
         annualRevenue: user.annualRevenue,
+        currency: user.currency,
+        theme: user.theme,
         token: generateToken(user._id)
       });
     } else {
@@ -182,6 +186,8 @@ router.get('/me', protect, async (req, res) => {
     role: req.user.role,
     monthlyRevenue: req.user.monthlyRevenue,
     annualRevenue: req.user.annualRevenue,
+    currency: req.user.currency,
+    theme: req.user.theme,
     createdAt: req.user.createdAt
   });
 });
@@ -408,12 +414,14 @@ router.put('/revenue', [
   }
 });
 
-// @route   PUT /api/auth/push-preferences
-router.put('/push-preferences', [
+// @route   PUT /api/auth/preferences
+router.put('/preferences', [
   protect,
   body('pushNotificationsEnabled').optional().isBoolean().withMessage('pushNotificationsEnabled must be a boolean'),
   body('paymentReminderDays').optional().isIn([1, 3, 7]).withMessage('paymentReminderDays must be 1, 3, or 7'),
-  body('language').optional().isIn(['en', 'fr']).withMessage('language must be en or fr')
+  body('language').optional().isIn(['en', 'fr']).withMessage('language must be en or fr'),
+  body('currency').optional().isIn(['EUR', 'USD']).withMessage('currency must be EUR or USD'),
+  body('theme').optional().isIn(['dark', 'light', 'dracula', 'nord', 'solarized']).withMessage('theme must be one of: dark, light, dracula, nord, solarized')
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -421,7 +429,7 @@ router.put('/push-preferences', [
   }
 
   try {
-    const { pushNotificationsEnabled, paymentReminderDays, language } = req.body;
+    const { pushNotificationsEnabled, paymentReminderDays, language, currency, theme } = req.body;
 
     const user = await User.findById(req.user._id);
 
@@ -429,7 +437,7 @@ router.put('/push-preferences', [
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update push notification preferences if provided
+    // Update preferences if provided
     if (pushNotificationsEnabled !== undefined) {
       user.pushNotificationsEnabled = pushNotificationsEnabled;
     }
@@ -439,14 +447,77 @@ router.put('/push-preferences', [
     if (language !== undefined) {
       user.language = language;
     }
+    if (currency !== undefined) {
+      user.currency = currency;
+    }
+    if (theme !== undefined) {
+      user.theme = theme;
+    }
 
     await user.save();
 
     res.json({
-      message: 'Push notification preferences updated successfully',
+      message: 'Preferences updated successfully',
       pushNotificationsEnabled: user.pushNotificationsEnabled,
       paymentReminderDays: user.paymentReminderDays,
-      language: user.language
+      language: user.language,
+      currency: user.currency,
+      theme: user.theme
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// @route   PUT /api/auth/push-preferences (deprecated, use /preferences)
+router.put('/push-preferences', [
+  protect,
+  body('pushNotificationsEnabled').optional().isBoolean().withMessage('pushNotificationsEnabled must be a boolean'),
+  body('paymentReminderDays').optional().isIn([1, 3, 7]).withMessage('paymentReminderDays must be 1, 3, or 7'),
+  body('language').optional().isIn(['en', 'fr']).withMessage('language must be en or fr'),
+  body('currency').optional().isIn(['EUR', 'USD']).withMessage('currency must be EUR or USD'),
+  body('theme').optional().isIn(['dark', 'light', 'dracula', 'nord', 'solarized']).withMessage('theme must be one of: dark, light, dracula, nord, solarized')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { pushNotificationsEnabled, paymentReminderDays, language, currency, theme } = req.body;
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update preferences if provided
+    if (pushNotificationsEnabled !== undefined) {
+      user.pushNotificationsEnabled = pushNotificationsEnabled;
+    }
+    if (paymentReminderDays !== undefined) {
+      user.paymentReminderDays = paymentReminderDays;
+    }
+    if (language !== undefined) {
+      user.language = language;
+    }
+    if (currency !== undefined) {
+      user.currency = currency;
+    }
+    if (theme !== undefined) {
+      user.theme = theme;
+    }
+
+    await user.save();
+
+    res.json({
+      message: 'Preferences updated successfully',
+      pushNotificationsEnabled: user.pushNotificationsEnabled,
+      paymentReminderDays: user.paymentReminderDays,
+      language: user.language,
+      currency: user.currency,
+      theme: user.theme
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
