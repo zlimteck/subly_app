@@ -5,13 +5,13 @@
 FROM node:20-alpine as backend-build
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm install --only=production
 COPY backend/ ./
 
 FROM node:20-alpine as frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
@@ -20,8 +20,8 @@ FROM nginx:alpine
 COPY --from=backend-build /app/backend /app/backend
 # Copy frontend build
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
-# Copy nginx config
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config for single container (use localhost instead of backend service)
+COPY nginx.prod.conf /etc/nginx/conf.d/default.conf
 
 # Install Node.js in the nginx container to run backend
 RUN apk add --no-cache nodejs npm
