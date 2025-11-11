@@ -42,7 +42,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/subly:${{ steps.version.outputs.version_number }}
             ${{ secrets.DOCKERHUB_USERNAME }}/subly:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
