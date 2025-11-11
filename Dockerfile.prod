@@ -2,13 +2,13 @@
 # Usage: docker build -f Dockerfile.prod -t subly:prod .
 # Run: docker run -e MONGODB_URI=... -e JWT_SECRET=... -p 3000:80 -p 5071:5071 subly:prod
 
-FROM node:20-alpine as backend-build
+FROM node:20-alpine AS backend-build
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 COPY backend/ ./
 
-FROM node:20-alpine as frontend-build
+FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
