@@ -41,9 +41,15 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=subly_admin
       - MONGO_INITDB_ROOT_PASSWORD=change_this_password
+      - MONGO_INITDB_DATABASE=subly
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   subly:
     image: zlimteck/subly:latest
@@ -56,11 +62,15 @@ services:
       - JWT_SECRET=your_secure_random_string_here
       - TZ=Europe/Paris
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
 ```
 
 2. **Start the services:**
