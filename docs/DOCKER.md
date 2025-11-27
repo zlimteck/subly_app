@@ -104,8 +104,6 @@ services:
   mongodb:
     image: mongo:8.0
     container_name: subly-mongodb
-    ports:
-      - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=subly_admin
       - MONGO_INITDB_ROOT_PASSWORD=change_this_password
@@ -114,6 +112,11 @@ services:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   subly:
     image: zlimteck/subly:latest
@@ -122,14 +125,23 @@ services:
       - "3000:80"
       - "5071:5071"
     environment:
+      - NODE_ENV=production
+      - PORT=5071
       - MONGODB_URI=mongodb://subly_admin:change_this_password@mongodb:27017/subly?authSource=admin
-      - JWT_SECRET=your_jwt_secret_here
+      - JWT_SECRET=your_secure_random_string_here
+      - FRONTEND_URL=http://your_ip_here:3000
+      - BACKEND_URL=http://your_ip_here:5071
+      - TZ=Europe/Paris
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   mongodb_data:
+    driver: local
   mongodb_config:
+    driver: local
 ```
 
 ### With MongoDB Atlas (Recommended for Production)

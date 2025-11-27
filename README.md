@@ -44,6 +44,7 @@ services:
       - MONGO_INITDB_DATABASE=subly
     volumes:
       - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
@@ -58,8 +59,12 @@ services:
       - "3000:80"
       - "5071:5071"
     environment:
+      - NODE_ENV=production
+      - PORT=5071
       - MONGODB_URI=mongodb://subly_admin:change_this_password@mongodb:27017/subly?authSource=admin
       - JWT_SECRET=your_secure_random_string_here
+      - FRONTEND_URL=http://your_ip_here:3000
+      - BACKEND_URL=http://your_ip_here:5071
       - TZ=Europe/Paris
     depends_on:
       mongodb:
