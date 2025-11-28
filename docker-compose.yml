@@ -35,12 +35,14 @@ services:
         - JWT_SECRET=your_jwt_secret_here
         - FRONTEND_URL=http://localhost:3000
         - BACKEND_URL=http://localhost:5071
-        - RESEND_API_KEY=your_resend_api_key_here
-        - EMAIL_FROM=noreply@yourdomain.com
-        - VAPID_PUBLIC_KEY=your_vapid_public_key_here
-        - VAPID_PRIVATE_KEY=your_vapid_private_key_here
-        - VAPID_SUBJECT=mailto:noreply@yourdomain.com
         - TZ=Europe/Paris
+        # Optional: Email notifications (uncomment to enable)
+        # - RESEND_API_KEY=your_resend_api_key_here
+        # - EMAIL_FROM=noreply@yourdomain.com
+        # Optional: Push notifications (uncomment to enable, generate keys with: node backend/scripts/generateVapidKeys.js)
+        # - VAPID_PUBLIC_KEY=your_vapid_public_key_here
+        # - VAPID_PRIVATE_KEY=your_vapid_private_key_here
+        # - VAPID_SUBJECT=mailto:noreply@yourdomain.com
       depends_on:
         mongodb:
           condition: service_healthy

@@ -7,6 +7,13 @@ let isInitialized = false;
 
 export function initializePushService() {
   if (!isInitialized) {
+    // Check if VAPID credentials are configured
+    if (!process.env.VAPID_SUBJECT || !process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+      console.log('⚠️  Push notification service disabled (VAPID credentials not configured)');
+      console.log('   To enable push notifications, set VAPID_SUBJECT, VAPID_PUBLIC_KEY, and VAPID_PRIVATE_KEY');
+      return;
+    }
+
     webpush.setVapidDetails(
       process.env.VAPID_SUBJECT,
       process.env.VAPID_PUBLIC_KEY,
@@ -19,6 +26,11 @@ export function initializePushService() {
 
 // Send push notification to a specific user
 export async function sendPushToUser(userId, payload) {
+  // If push service is not initialized, skip silently
+  if (!isInitialized) {
+    return { success: false, message: 'Push notification service not initialized' };
+  }
+
   try {
     // Get all active subscriptions for this user
     const subscriptions = await PushSubscription.find({
