@@ -135,7 +135,11 @@
     "costPerPerson": "Cost per person",
     "youPay": "You pay",
     "paidByYou": "Paid by you",
-    "sharingInfo": "Sharing"
+    "sharingInfo": "Sharing",
+    "createNewCategory": "Create new category...",
+    "newCategoryName": "New category name",
+    "categoryNameRequired": "Category name is required",
+    "categoryCreateFailed": "Failed to create category"
   },
   "paymentMethods": {
     "card": "Credit/Debit Card",

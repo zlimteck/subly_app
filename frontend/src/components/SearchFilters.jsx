@@ -1,9 +1,8 @@
 import { Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { CATEGORIES } from '../constants/categories'
 import './SearchFilters.css'
 
-function SearchFilters({ filters, onFilterChange, onClearFilters }) {
+function SearchFilters({ filters, onFilterChange, onClearFilters, categories = [] }) {
   const { t } = useTranslation()
 
   // Helper function to convert category name to translation key
@@ -61,8 +60,8 @@ function SearchFilters({ filters, onFilterChange, onClearFilters }) {
             className="filter-select"
           >
             <option value="All">{t('common.all')}</option>
-            {CATEGORIES.map(cat => (
-              <option key={cat} value={cat}>{t(`categories.${getCategoryKey(cat)}`)}</option>
+            {categories.map(cat => (
+              <option key={cat._id} value={cat.name}>{cat.name}</option>
             ))}
           </select>
         </div>

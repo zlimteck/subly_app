@@ -4,11 +4,10 @@ import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
 import { getUploadUrl } from '../utils/api'
-import { CATEGORIES } from '../constants/categories'
 import { getBestLogoUrl } from '../config/serviceLogos'
 import './SubscriptionForm.css'
 
-function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
+function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categories }) {
   const { t } = useTranslation()
   const { formatAmount, currency } = useCurrency()
   const [formData, setFormData] = useState({
@@ -40,6 +39,9 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
   const [logoSource, setLogoSource] = useState(null) // 'google', 'local', or null
   const [useCustomLogo, setUseCustomLogo] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
 
   useEffect(() => {
     if (initialData) {
@@ -240,6 +242,53 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
     }))
   }
 
+  const handleCategoryChange = (e) => {
+    const value = e.target.value
+    if (value === '__new__') {
+      setShowNewCategoryInput(true)
+      setNewCategoryName('')
+    } else {
+      setFormData(prev => ({ ...prev, category: value }))
+      setShowNewCategoryInput(false)
+    }
+  }
+
+  const createNewCategory = async () => {
+    if (!newCategoryName.trim()) {
+      setError(t('subscription.categoryNameRequired') || 'Category name is required')
+      return
+    }
+
+    setCreatingCategory(true)
+    setError('')
+
+    try {
+      const response = await axios.post('/api/categories', {
+        name: newCategoryName.trim()
+      })
+
+      // Add the new category to the form and trigger a refresh
+      setFormData(prev => ({ ...prev, category: response.data.name }))
+      setShowNewCategoryInput(false)
+      setNewCategoryName('')
+
+      // Trigger parent component to reload categories
+      if (window.reloadCategories) {
+        await window.reloadCategories()
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || t('subscription.categoryCreateFailed') || 'Failed to create category')
+    } finally {
+      setCreatingCategory(false)
+    }
+  }
+
+  const cancelNewCategory = () => {
+    setShowNewCategoryInput(false)
+    setNewCategoryName('')
+    setError('')
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -329,17 +378,57 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData }) {
             <label htmlFor="category">
               <span className="terminal-prompt">&gt;</span> {t('subscription.category').toUpperCase()}
             </label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-            >
-              <option value="">{t('subscription.selectCategory')}</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{t(`categories.${cat.toLowerCase().replace(/\s+/g, '')}`)}</option>
-              ))}
-            </select>
+            {!showNewCategoryInput ? (
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleCategoryChange}
+              >
+                <option value="">{t('subscription.selectCategory')}</option>
+                {categories && categories.map(cat => (
+                  <option key={cat._id} value={cat.name}>{cat.name}</option>
+                ))}
+                <option value="__new__" style={{ fontStyle: 'italic', borderTop: '1px solid var(--terminal-green)' }}>
+                  + {t('subscription.createNewCategory') || '+ Create new category...'}
+                </option>
+              </select>
+            ) : (
+              <div className="new-category-input-group">
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder={t('subscription.newCategoryName') || 'New category name'}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      createNewCategory()
+                    } else if (e.key === 'Escape') {
+                      cancelNewCategory()
+                    }
+                  }}
+                />
+                <div className="new-category-actions">
+                  <button
+                    type="button"
+                    onClick={createNewCategory}
+                    disabled={creatingCategory}
+                    className="btn-confirm-category"
+                  >
+                    {creatingCategory ? '...' : '✓'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelNewCategory}
+                    className="btn-cancel-category"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

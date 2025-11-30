@@ -135,7 +135,11 @@
     "costPerPerson": "Coût par personne",
     "youPay": "Vous payez",
     "paidByYou": "Payé par vous",
-    "sharingInfo": "Partage"
+    "sharingInfo": "Partage",
+    "createNewCategory": "Créer une nouvelle catégorie...",
+    "newCategoryName": "Nom de la nouvelle catégorie",
+    "categoryNameRequired": "Le nom de la catégorie est requis",
+    "categoryCreateFailed": "Échec de la création de la catégorie"
   },
   "paymentMethods": {
     "card": "Carte bancaire",

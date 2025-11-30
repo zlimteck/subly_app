@@ -21,6 +21,7 @@ function Dashboard() {
   const location = useLocation()
   const [subscriptions, setSubscriptions] = useState([])
   const [stats, setStats] = useState(null)
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingSub, setEditingSub] = useState(null)
@@ -43,6 +44,20 @@ function Dashboard() {
 
   useEffect(() => {
     fetchData()
+
+    // Expose reloadCategories function globally for SubscriptionForm
+    window.reloadCategories = async () => {
+      try {
+        const categoriesRes = await axios.get('/api/categories')
+        setCategories(categoriesRes.data)
+      } catch (error) {
+        console.error('Error reloading categories:', error)
+      }
+    }
+
+    return () => {
+      delete window.reloadCategories
+    }
   }, [])
 
   useEffect(() => {
@@ -91,12 +106,14 @@ function Dashboard() {
 
   const fetchData = async () => {
     try {
-      const [subsRes, statsRes] = await Promise.all([
+      const [subsRes, statsRes, categoriesRes] = await Promise.all([
         axios.get('/api/subscriptions'),
-        axios.get('/api/subscriptions/stats')
+        axios.get('/api/subscriptions/stats'),
+        axios.get('/api/categories')
       ])
       setSubscriptions(subsRes.data)
       setStats(statsRes.data)
+      setCategories(categoriesRes.data)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -260,6 +277,7 @@ function Dashboard() {
             onCancel={handleCancel}
             onDelete={handleDelete}
             initialData={editingSub}
+            categories={categories}
           />
         )}
 
@@ -271,6 +289,7 @@ function Dashboard() {
               filters={filters}
               onFilterChange={setFilters}
               onClearFilters={handleClearFilters}
+              categories={categories}
             />
 
             <SubscriptionList

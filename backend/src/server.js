@@ -10,6 +10,7 @@ import uploadRoutes from './routes/upload.js';
 import invitationRoutes from './routes/invitations.js';
 import adminRoutes from './routes/admin.js';
 import pushRoutes from './routes/pushRoutes.js';
+import categoryRoutes from './routes/categories.js';
 import { startSubscriptionCron } from './services/subscriptionCron.js';
 import { startTrialReminderCron } from './services/trialReminderService.js';
 import { startPaymentReminderCron } from './services/paymentReminderService.js';
@@ -81,6 +82,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/invitations', invitationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
