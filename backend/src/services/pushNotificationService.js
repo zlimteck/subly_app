@@ -7,8 +7,12 @@ let isInitialized = false;
 
 export function initializePushService() {
   if (!isInitialized) {
-    // Check if VAPID credentials are configured
-    if (!process.env.VAPID_SUBJECT || !process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    // Check if VAPID credentials are configured (must exist and not be empty)
+    const hasVapidSubject = process.env.VAPID_SUBJECT && process.env.VAPID_SUBJECT.trim() !== '';
+    const hasVapidPublicKey = process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PUBLIC_KEY.trim() !== '';
+    const hasVapidPrivateKey = process.env.VAPID_PRIVATE_KEY && process.env.VAPID_PRIVATE_KEY.trim() !== '';
+
+    if (!hasVapidSubject || !hasVapidPublicKey || !hasVapidPrivateKey) {
       console.log('⚠️  Push notification service disabled (VAPID credentials not configured)');
       console.log('   To enable push notifications, set VAPID_SUBJECT, VAPID_PUBLIC_KEY, and VAPID_PRIVATE_KEY');
       return;
