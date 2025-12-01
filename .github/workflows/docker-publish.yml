@@ -29,8 +29,10 @@ jobs:
             echo "version=${VERSION}" >> $GITHUB_OUTPUT
             echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
           else
+            # For manual builds, get the latest git tag
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")
             echo "version=latest" >> $GITHUB_OUTPUT
-            echo "version_number=latest" >> $GITHUB_OUTPUT
+            echo "version_number=${LATEST_TAG#v}" >> $GITHUB_OUTPUT
           fi
 
       - name: Build and push Docker image
@@ -45,3 +47,5 @@ jobs:
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            APP_VERSION=${{ steps.version.outputs.version_number }}

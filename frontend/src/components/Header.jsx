@@ -8,7 +8,7 @@ import { differenceInDays, parseISO, startOfDay } from 'date-fns'
 import NotificationPanel from './NotificationPanel'
 import './Header.css'
 
-function Header({ user, subscriptions = [] }) {
+function Header({ user, subscriptions = [], version = '' }) {
   const { logout } = useAuth()
   const { currency, toggleCurrency } = useCurrency()
   const navigate = useNavigate()
@@ -39,7 +39,7 @@ function Header({ user, subscriptions = [] }) {
         <div className="header-left">
           <h1 className="logo terminal-text">SUBLY</h1>
           <div className="terminal-breadcrumb">
-            <span className="terminal-prompt">root@subly:~$</span>
+            <span className="terminal-prompt">root@subly{version ? `-${version}` : ''}:~$</span>
             <span className="cursor"></span>
           </div>
         </div>

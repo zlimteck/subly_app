@@ -89,6 +89,75 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Subly API is running' });
 });
 
+// Version endpoint
+app.get('/api/version', (req, res) => {
+  res.json({ version: process.env.APP_VERSION || 'dev' });
+});
+
+// Check for updates endpoint (admin only)
+app.get('/api/version/check-updates', async (req, res) => {
+  try {
+    const currentVersion = process.env.APP_VERSION || 'dev';
+
+    // Fetch latest release and all releases from GitHub
+    const [latestResponse, releasesResponse] = await Promise.all([
+      fetch('https://api.github.com/repos/zlimteck/subly_app/releases/latest', {
+        headers: { 'User-Agent': 'Subly-App' }
+      }),
+      fetch('https://api.github.com/repos/zlimteck/subly_app/releases?per_page=10', {
+        headers: { 'User-Agent': 'Subly-App' }
+      })
+    ]);
+
+    if (!latestResponse.ok) {
+      return res.json({
+        current: currentVersion,
+        latest: null,
+        updateAvailable: false,
+        releases: [],
+        error: 'Unable to check for updates'
+      });
+    }
+
+    const latestRelease = await latestResponse.json();
+    const latestVersion = latestRelease.tag_name.replace(/^v/, '');
+
+    // Get all releases
+    const allReleases = releasesResponse.ok ? await releasesResponse.json() : [];
+    const releases = allReleases.map(release => ({
+      version: release.tag_name.replace(/^v/, ''),
+      name: release.name,
+      body: release.body,
+      publishedAt: release.published_at,
+      url: release.html_url,
+      isCurrent: release.tag_name.replace(/^v/, '') === currentVersion.replace(/^v/, '')
+    }));
+
+    // Simple version comparison (removes 'v' prefix if present)
+    const current = currentVersion.replace(/^v/, '');
+    const updateAvailable = current !== 'dev' && current !== 'latest' && current !== latestVersion;
+
+    res.json({
+      current: currentVersion,
+      latest: latestVersion,
+      updateAvailable,
+      releaseUrl: latestRelease.html_url,
+      releaseName: latestRelease.name,
+      publishedAt: latestRelease.published_at,
+      releases
+    });
+  } catch (error) {
+    console.error('Error checking for updates:', error);
+    res.json({
+      current: process.env.APP_VERSION || 'dev',
+      latest: null,
+      updateAvailable: false,
+      releases: [],
+      error: 'Failed to check for updates'
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

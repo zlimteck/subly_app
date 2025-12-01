@@ -23,6 +23,7 @@ function Dashboard() {
   const [stats, setStats] = useState(null)
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [appVersion, setAppVersion] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingSub, setEditingSub] = useState(null)
   const [showProfileModal, setShowProfileModal] = useState(false)
@@ -106,14 +107,16 @@ function Dashboard() {
 
   const fetchData = async () => {
     try {
-      const [subsRes, statsRes, categoriesRes] = await Promise.all([
+      const [subsRes, statsRes, categoriesRes, versionRes] = await Promise.all([
         axios.get('/api/subscriptions'),
         axios.get('/api/subscriptions/stats'),
-        axios.get('/api/categories')
+        axios.get('/api/categories'),
+        axios.get('/api/version').catch(() => ({ data: { version: 'dev' } }))
       ])
       setSubscriptions(subsRes.data)
       setStats(statsRes.data)
       setCategories(categoriesRes.data)
+      setAppVersion(versionRes.data.version)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -240,7 +243,7 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      <Header user={user} subscriptions={subscriptions} />
+      <Header user={user} subscriptions={subscriptions} version={appVersion} />
       <ProfileModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}

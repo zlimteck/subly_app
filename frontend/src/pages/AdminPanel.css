@@ -16,6 +16,15 @@
   margin-bottom: 30px;
   border-bottom: 2px solid var(--border-color);
   padding-bottom: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+/* Hide scrollbar for webkit browsers */
+.admin-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-button {
@@ -34,6 +43,8 @@
   gap: 8px;
   position: relative;
   bottom: -2px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab-button:hover {
@@ -378,5 +389,303 @@
 
   .note-cell {
     max-width: 100px;
+  }
+}
+
+/* Updates Section */
+.updates-section {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 30px;
+}
+
+.update-check-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: transparent;
+  border: 2px solid var(--terminal-green);
+  border-radius: 6px;
+  color: var(--terminal-green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: var(--terminal-green);
+  color: var(--bg-primary);
+  box-shadow: var(--glow);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-refresh .spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.update-info-card {
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 30px;
+}
+
+.update-available,
+.update-uptodate,
+.update-error {
+  text-align: center;
+  padding: 20px;
+}
+
+.update-available {
+  color: var(--terminal-green);
+}
+
+.update-uptodate {
+  color: var(--text-secondary);
+}
+
+.update-error {
+  color: var(--error-color, #ff6b6b);
+}
+
+.update-icon {
+  margin: 0 auto 20px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.update-available h3,
+.update-uptodate h3,
+.update-error h3 {
+  font-size: 24px;
+  margin: 15px 0;
+  font-weight: 700;
+}
+
+.update-available p,
+.update-uptodate p,
+.update-error p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 10px 0;
+  color: var(--text-secondary);
+}
+
+.release-name {
+  font-weight: 600;
+  color: var(--text-primary) !important;
+  font-size: 16px !important;
+}
+
+.release-date {
+  font-size: 12px !important;
+  opacity: 0.7;
+}
+
+.btn-download-update {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  margin-top: 20px;
+  background: var(--terminal-green);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.btn-download-update:hover {
+  background: var(--terminal-green-light, #00ff41);
+  box-shadow: var(--glow);
+  transform: translateY(-2px);
+}
+
+/* Release History */
+.releases-history {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 30px;
+}
+
+.releases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.release-item {
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.release-item.current {
+  border-color: var(--terminal-green);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+}
+
+.release-item:hover {
+  border-color: var(--terminal-green);
+}
+
+.release-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.release-version {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.release-version code {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--terminal-green);
+  background: var(--bg-primary);
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.badge-current {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--bg-primary);
+  background: var(--terminal-green);
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.release-date {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.release-item h3.release-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.release-notes {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+
+.release-notes pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}
+
+.release-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--terminal-green);
+  text-decoration: none;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.3s ease;
+}
+
+.release-link:hover {
+  color: var(--terminal-green-light, #00ff41);
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .btn-refresh {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .update-info-card {
+    padding: 20px;
+  }
+
+  .btn-download-update {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .updates-section,
+  .releases-history {
+    padding: 20px;
+  }
+
+  .release-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .release-version code {
+    font-size: 16px;
   }
 }

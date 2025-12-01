@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCurrency } from '../context/CurrencyContext'
-import { Clock, CheckCircle, XCircle, Trash2, Copy, Plus, Users, Key } from 'lucide-react'
+import { Clock, CheckCircle, XCircle, Trash2, Copy, Plus, Users, Key, Download, RefreshCw, ExternalLink } from 'lucide-react'
 import axios from 'axios'
 import { format } from 'date-fns'
 import { fr, enUS } from 'date-fns/locale'
@@ -48,6 +48,10 @@ function AdminPanel() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [confirmUsername, setConfirmUsername] = useState('')
 
+  // Updates state
+  const [updateInfo, setUpdateInfo] = useState(null)
+  const [checkingUpdates, setCheckingUpdates] = useState(false)
+
   useEffect(() => {
     if (!user || user.role !== 'admin') {
       navigate('/dashboard')
@@ -67,6 +71,19 @@ function AdminPanel() {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const checkForUpdates = async () => {
+    try {
+      setCheckingUpdates(true)
+      const response = await axios.get('/api/version/check-updates')
+      setUpdateInfo(response.data)
+    } catch (err) {
+      console.error('Error checking for updates:', err)
+      setUpdateInfo({ error: 'Failed to check for updates' })
+    } finally {
+      setCheckingUpdates(false)
     }
   }
 
@@ -155,6 +172,16 @@ function AdminPanel() {
         >
           <Users size={18} />
           {t('admin.tabUserManagement')}
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'updates' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('updates')
+            if (!updateInfo) checkForUpdates()
+          }}
+        >
+          <Download size={18} />
+          {t('admin.tabUpdates') || 'Updates'}
         </button>
       </div>
 
@@ -319,6 +346,135 @@ function AdminPanel() {
           {error && <div className="message error-message">{error}</div>}
           {success && <div className="message success-message">{success}</div>}
         </div>
+      )}
+
+      {/* Tab Content: Updates */}
+      {activeTab === 'updates' && (
+        <>
+          {/* Version Stats */}
+          <div className="admin-stats">
+            <div className="stat-card">
+              <div className="stat-value">{updateInfo?.current || '...'}</div>
+              <div className="stat-label">{t('admin.currentVersion')}</div>
+            </div>
+            {updateInfo?.latest && (
+              <div className={`stat-card ${updateInfo.updateAvailable ? 'active' : ''}`}>
+                <div className="stat-value">{updateInfo.latest}</div>
+                <div className="stat-label">{t('admin.latestVersion')}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Check Updates Section */}
+          <div className="updates-section">
+            <h2 className="section-title">
+              <span className="terminal-prompt">&gt;</span> {t('admin.systemUpdates')}
+            </h2>
+
+            <div className="update-check-container">
+              <button
+                onClick={checkForUpdates}
+                disabled={checkingUpdates}
+                className="btn-refresh"
+              >
+                <RefreshCw size={18} className={checkingUpdates ? 'spinning' : ''} />
+                {checkingUpdates ? t('admin.checking') : t('admin.checkForUpdates')}
+              </button>
+
+              {updateInfo && (
+                <div className="update-info-card">
+                  {updateInfo.updateAvailable ? (
+                    <div className="update-available">
+                      <div className="update-icon">
+                        <Download size={48} />
+                      </div>
+                      <h3>{t('admin.updateAvailableTitle')}</h3>
+                      <p>{t('admin.updateAvailableText')}</p>
+                      {updateInfo.releaseName && (
+                        <p className="release-name">{updateInfo.releaseName}</p>
+                      )}
+                      {updateInfo.publishedAt && (
+                        <p className="release-date">
+                          {t('admin.publishedOn')}: {format(new Date(updateInfo.publishedAt), 'MMM dd, yyyy HH:mm', { locale: i18n.language === 'fr' ? fr : enUS })}
+                        </p>
+                      )}
+                      <a
+                        href={updateInfo.releaseUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-download-update"
+                      >
+                        <ExternalLink size={18} />
+                        {t('admin.viewRelease')}
+                      </a>
+                    </div>
+                  ) : updateInfo.error ? (
+                    <div className="update-error">
+                      <XCircle size={48} />
+                      <h3>{t('admin.errorCheckingUpdates')}</h3>
+                      <p>{updateInfo.error}</p>
+                    </div>
+                  ) : (
+                    <div className="update-uptodate">
+                      <CheckCircle size={48} />
+                      <h3>{t('admin.upToDate')}</h3>
+                      <p>{t('admin.upToDateText')}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!updateInfo && !checkingUpdates && (
+                <div className="empty-state">
+                  <p>{t('admin.clickToCheck')}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Release History */}
+          {updateInfo?.releases && updateInfo.releases.length > 0 && (
+            <div className="releases-history">
+              <h2 className="section-title">
+                <span className="terminal-prompt">&gt;</span> {t('admin.releaseHistory') || 'Release History'}
+              </h2>
+              <div className="releases-list">
+                {updateInfo.releases.map((release, index) => (
+                  <div key={index} className={`release-item ${release.isCurrent ? 'current' : ''}`}>
+                    <div className="release-header">
+                      <div className="release-version">
+                        <code>v{release.version}</code>
+                        {release.isCurrent && (
+                          <span className="badge-current">{t('admin.currentBadge') || 'Current'}</span>
+                        )}
+                      </div>
+                      <span className="release-date">
+                        {format(new Date(release.publishedAt), 'MMM dd, yyyy', { locale: i18n.language === 'fr' ? fr : enUS })}
+                      </span>
+                    </div>
+                    {release.name && (
+                      <h3 className="release-name">{release.name}</h3>
+                    )}
+                    {release.body && (
+                      <div className="release-notes">
+                        <pre>{release.body}</pre>
+                      </div>
+                    )}
+                    <a
+                      href={release.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="release-link"
+                    >
+                      <ExternalLink size={14} />
+                      {t('admin.viewOnGitHub') || 'View on GitHub'}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
       </main>
     </div>
