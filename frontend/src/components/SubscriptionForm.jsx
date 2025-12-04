@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
 import { getUploadUrl } from '../utils/api'
 import { getBestLogoUrl } from '../config/serviceLogos'
+import IconSearchModal from './IconSearchModal'
 import './SubscriptionForm.css'
 
 function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categories }) {
@@ -42,6 +43,7 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
+  const [showIconSearchModal, setShowIconSearchModal] = useState(false)
 
   useEffect(() => {
     if (initialData) {
@@ -213,6 +215,19 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
       iconFilename: '',
       iconUrl: ''
     }))
+  }
+
+  const handleIconSelect = (icon) => {
+    // Set the selected icon from dashboard-icons
+    setIconPreview(icon.url)
+    setUseCustomLogo(true) // Mark as using custom icon
+    setLogoSource('dashboard-icons')
+    setFormData(prev => ({
+      ...prev,
+      iconUrl: icon.url,
+      iconFilename: '' // Clear any uploaded file
+    }))
+    console.log('✅ Icon selected from dashboard-icons:', icon.name)
   }
 
   const toggleCustomLogo = () => {
@@ -677,21 +692,31 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
 
             {/* Show file input only if no logo preview OR user wants to upload */}
             {!iconPreview && (
-              <div className="file-input-wrapper">
-                <input
-                  id="iconFile"
-                  name="iconFile"
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp"
-                  onChange={handleFileChange}
+              <div className="icon-upload-section">
+                <div className="file-input-wrapper">
+                  <input
+                    id="iconFile"
+                    name="iconFile"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp"
+                    onChange={handleFileChange}
+                    disabled={uploadingIcon}
+                  />
+                  <label
+                    htmlFor="iconFile"
+                    className={`file-input-label ${uploadingIcon ? 'disabled' : ''}`}
+                  >
+                    <span className="terminal-prompt">&gt;</span> {t('subscription.chooseFile').toUpperCase()}
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowIconSearchModal(true)}
+                  className="btn-search-icon"
                   disabled={uploadingIcon}
-                />
-                <label
-                  htmlFor="iconFile"
-                  className={`file-input-label ${uploadingIcon ? 'disabled' : ''}`}
                 >
-                  <span className="terminal-prompt">&gt;</span> {t('subscription.chooseFile').toUpperCase()}
-                </label>
+                  <span className="terminal-prompt">&gt;</span> {(t('subscription.searchIcon') || 'SEARCH ICON').toUpperCase()}
+                </button>
               </div>
             )}
             {uploadingIcon && <div className="upload-status">{t('subscription.uploading')}</div>}
@@ -699,7 +724,13 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
             {iconPreview && (
               <div className="icon-preview">
                 <img src={iconPreview} alt={t('subscription.iconPreview')} />
-                {useCustomLogo && (
+                {useCustomLogo && logoSource === 'dashboard-icons' && (
+                  <div className="logo-badge dashboard-icons">
+                    <span className="badge-icon">🔍</span>
+                    <span>{t('subscription.dashboardIcon') || 'Dashboard icon'}</span>
+                  </div>
+                )}
+                {useCustomLogo && !logoSource && (
                   <div className="logo-badge custom">
                     <span className="badge-icon">⚙</span>
                     <span>{t('subscription.customLogo') || 'Custom logo'}</span>
@@ -760,6 +791,14 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
           )}
         </div>
       </form>
+
+      {/* Icon Search Modal */}
+      <IconSearchModal
+        isOpen={showIconSearchModal}
+        onClose={() => setShowIconSearchModal(false)}
+        onSelectIcon={handleIconSelect}
+        initialSearch={formData.name}
+      />
     </div>
   )
 }
