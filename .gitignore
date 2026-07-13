@@ -30,4 +30,7 @@ dist/
 Thumbs.db
 
 # Docker
-*.dockerignore
+
+# Memory bank (local session context)
+memory-bank/
+CLAUDE.md
