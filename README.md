@@ -27,6 +27,7 @@
 - 🌐 **i18n** - English and French support
 - 📱 **Responsive** - Works seamlessly on desktop, tablet, and mobile
 - 🔐 **Secure** - JWT auth, bcrypt passwords, email verification, invitation system
+- 🤖 **MCP Server** - Streamable HTTP MCP endpoint to control Subly via AI assistants (Claude, Cursor…)
 
 ## Quick Start
 
@@ -130,7 +131,7 @@ docker exec -it subly-app node /app/backend/scripts/generateInvite.js
 
 **Frontend:** React 18, Vite, React Router, Recharts, Axios, date-fns, Lucide Icons
 
-**Backend:** Node.js, Express, MongoDB, Mongoose, JWT, bcrypt, Resend (email), web-push
+**Backend:** Node.js, Express, MongoDB, Mongoose, JWT, bcrypt, Resend (email), web-push, MCP SDK
 
 **DevOps:** Docker, Docker Compose, Nginx, GitHub Actions
 
@@ -141,7 +142,69 @@ docker exec -it subly-app node /app/backend/scripts/generateInvite.js
 - 💻 **[Development Guide](docs/DEVELOPMENT.md)** - Local development setup
 - ⚙️ **[Configuration](docs/CONFIGURATION.md)** - Environment variables reference
 - 🔌 **[API Documentation](docs/API.md)** - REST API endpoints
+- 🤖 **[MCP Server](#mcp-server)** - AI assistant integration
 - 🏗️ **[Architecture](CLAUDE.md)** - Project structure and design
+
+## MCP Server
+
+Subly exposes a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server over Streamable HTTP, allowing AI assistants (Claude Desktop, Cursor, etc.) to read and manage your subscriptions directly.
+
+**Endpoint:** `POST http://<your-host>:5071/mcp`
+
+**Authentication:** Pass your Subly JWT as a Bearer token in the `Authorization` header.
+
+### Available tools
+
+| Tool | Description |
+|------|-------------|
+| `list_subscriptions` | List subscriptions (optional filters: `activeOnly`, `category`) |
+| `get_stats` | Monthly/yearly totals and spending by category |
+| `list_categories` | List all user categories |
+| `create_subscription` | Create a new subscription |
+| `update_subscription` | Update an existing subscription by ID |
+| `delete_subscription` | Delete a subscription by ID |
+
+### Claude Desktop configuration
+
+Claude Desktop does not support Streamable HTTP natively. Use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a stdio bridge — no extra install required (`npx` handles it).
+
+Add the following to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "subly": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:5071/mcp",
+        "--header",
+        "Authorization:Bearer <your_subly_jwt>"
+      ]
+    }
+  }
+}
+```
+
+> **Tip:** Retrieve your JWT by logging in via the Subly web app — it is stored in your browser's `localStorage` under the key `token`.
+
+### Other compatible clients
+
+Clients that support Streamable HTTP natively (Cursor, etc.) can connect directly:
+
+```json
+{
+  "mcpServers": {
+    "subly": {
+      "type": "http",
+      "url": "http://localhost:5071/mcp",
+      "headers": {
+        "Authorization": "Bearer <your_subly_jwt>"
+      }
+    }
+  }
+}
+```
 
 ## Quick Links
 

@@ -15,6 +15,7 @@ import { startSubscriptionCron } from './services/subscriptionCron.js';
 import { startTrialReminderCron } from './services/trialReminderService.js';
 import { startPaymentReminderCron } from './services/paymentReminderService.js';
 import { initializePushService } from './services/pushNotificationService.js';
+import { mcpHandler } from './mcp/server.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -83,6 +84,9 @@ app.use('/api/invitations', invitationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/categories', categoryRoutes);
+
+// MCP Streamable HTTP endpoint
+app.post('/mcp', mcpHandler);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -160,4 +164,5 @@ app.get('/api/version/check-updates', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`MCP Streamable HTTP endpoint: http://localhost:${PORT}/mcp`);
 });

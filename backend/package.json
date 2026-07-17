@@ -10,6 +10,7 @@
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -23,7 +24,8 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.10",
     "resend": "^6.4.1",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
