@@ -6,13 +6,22 @@ import User from '../models/User.js';
 import Subscription from '../models/Subscription.js';
 import Category from '../models/Category.js';
 
-// Verify JWT and return user, or throw
+// Verify API token or JWT and return user, or throw
 async function authenticate(req) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) {
     throw new Error('Missing or invalid Authorization header');
   }
   const token = auth.split(' ')[1];
+
+  // Try API token first
+  const userByApiToken = await User.findOne({ apiToken: token }).select('-password');
+  if (userByApiToken) {
+    if (userByApiToken.isDeleted) throw new Error('User not found or deactivated');
+    return userByApiToken;
+  }
+
+  // Fall back to JWT
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
   const user = await User.findById(decoded.id).select('-password');
   if (!user || user.isDeleted) {
