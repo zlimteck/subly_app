@@ -90,6 +90,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['dark', 'light', 'dracula', 'nord', 'solarized'],
     default: 'dark'
+  },
+  apiToken: {
+    type: String,
+    unique: true,
+    sparse: true
   }
 }, {
   timestamps: true
@@ -125,6 +130,12 @@ userSchema.methods.getCalendarToken = function() {
     this.calendarToken = crypto.randomBytes(32).toString('hex');
   }
   return this.calendarToken;
+};
+
+// Method to generate a new API token
+userSchema.methods.generateApiToken = function() {
+  this.apiToken = crypto.randomBytes(32).toString('hex');
+  return this.apiToken;
 };
 
 // Cascade delete subscriptions when user is deleted (hard delete)

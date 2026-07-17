@@ -102,6 +102,10 @@
     "selectCategory": "Sélectionner une catégorie...",
     "freeTrial": "Période d'essai gratuite",
     "trialEndDate": "Date de fin d'essai",
+    "credit": "Crédit",
+    "isCredit": "Paiement à crédit / fractionné",
+    "creditEndDate": "Date de fin du crédit",
+    "creditExpired": "Terminé",
     "serviceUrl": "URL du service",
     "urlHint": "Entrez l'URL du service pour détecter automatiquement le logo",
     "icon": "Image d'icône",
@@ -266,7 +270,15 @@
     "generateCalendarUrl": "Générer l'URL du calendrier",
     "copy": "Copier",
     "copied": "Copié !",
-    "calendarUrlHint": "Utilisez cette URL pour vous abonner dans Apple Calendar, Google Calendar ou Outlook. Votre calendrier se synchronisera automatiquement."
+    "calendarUrlHint": "Utilisez cette URL pour vous abonner dans Apple Calendar, Google Calendar ou Outlook. Votre calendrier se synchronisera automatiquement.",
+    "apiToken": "Token API",
+    "apiTokenDescription": "Utilisez ce token pour accéder à l'API Subly depuis des outils externes (MCP, scripts, intégrations). Il n'expire pas.",
+    "showApiToken": "Afficher le token API",
+    "apiTokenRegen": "Régénérer le token",
+    "apiTokenRegenConfirm": "Confirmer la régénération ?",
+    "apiTokenHint": "Traitez ce token comme un mot de passe. Le régénérer invalidera l'ancien immédiatement.",
+    "show": "Afficher",
+    "hide": "Masquer"
   },
   "themes": {
     "dark": "Sombre",

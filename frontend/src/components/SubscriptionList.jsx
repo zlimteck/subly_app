@@ -1,6 +1,6 @@
 import { format, differenceInDays, startOfDay } from 'date-fns'
 import { fr, enUS } from 'date-fns/locale'
-import { Edit2, Calendar, DollarSign, ExternalLink, LayoutGrid, List, Clock, ArrowUpDown, Users } from 'lucide-react'
+import { Edit2, Calendar, DollarSign, ExternalLink, LayoutGrid, List, Clock, ArrowUpDown, Users, CreditCard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '../context/CurrencyContext'
 import { getUploadUrl } from '../utils/api'
@@ -57,8 +57,13 @@ function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onTogg
             : null
           const isTrialEndingSoon = trialDaysLeft !== null && trialDaysLeft >= 0 && trialDaysLeft <= 3
 
+          const creditDaysLeft = sub.isCredit && sub.endDate
+            ? differenceInDays(startOfDay(new Date(sub.endDate)), startOfDay(new Date()))
+            : null
+          const isCreditExpired = creditDaysLeft !== null && creditDaysLeft < 0
+
           return (
-            <div key={sub._id} className={`subscription-card glow ${sub.isTrial ? 'trial-card' : ''}`}>
+            <div key={sub._id} className={`subscription-card glow ${sub.isTrial ? 'trial-card' : ''} ${sub.isCredit ? 'credit-card-item' : ''}`}>
               <div className="sub-header">
                 <div className="sub-title-row">
                   {(sub.iconFilename || sub.iconUrl) && (
@@ -82,6 +87,11 @@ function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onTogg
                       {sub.isShared && (
                         <span className="shared-badge">
                           <Users size={12} /> {t('subscription.shared')}
+                        </span>
+                      )}
+                      {sub.isCredit && (
+                        <span className={`credit-badge ${isCreditExpired ? 'expired' : ''}`}>
+                          <CreditCard size={12} /> {isCreditExpired ? t('subscription.creditExpired') : creditDaysLeft !== null ? `${t('subscription.credit')} ${creditDaysLeft}d` : t('subscription.credit')}
                         </span>
                       )}
                     </div>
@@ -153,6 +163,18 @@ function SubscriptionList({ subscriptions, onEdit, viewMode = 'extended', onTogg
                         </div>
                       )}
                     </>
+                  )}
+
+                  {sub.isCredit && sub.endDate && (
+                    <div className={`info-row credit-info ${isCreditExpired ? 'expired' : ''}`}>
+                      <CreditCard size={16} style={{ color: 'inherit' }} />
+                      <span className="info-label">{t('subscription.creditEndDate')}:</span>
+                      <span className="info-value">
+                        {format(new Date(sub.endDate), 'MMM dd, yyyy', { locale: i18n.language === 'fr' ? fr : enUS })}
+                        {!isCreditExpired && creditDaysLeft !== null && ` (${creditDaysLeft}d ${t('common.daysLeft')})`}
+                        {isCreditExpired && ` (${t('subscription.creditExpired')})`}
+                      </span>
+                    </div>
                   )}
 
                   {sub.billingCycle === 'annual' && (

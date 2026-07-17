@@ -326,6 +326,46 @@
   border-color: color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
+.credit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: color-mix(in srgb, #f97316 15%, transparent);
+  border: 1px solid color-mix(in srgb, #f97316 40%, transparent);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f97316;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.credit-badge.expired {
+  background: color-mix(in srgb, var(--text-muted) 15%, transparent);
+  border-color: color-mix(in srgb, var(--text-muted) 40%, transparent);
+  color: var(--text-muted);
+}
+
+.credit-card-item {
+  border-color: color-mix(in srgb, #f97316 25%, transparent);
+}
+
+.credit-info {
+  color: #f97316;
+  font-weight: 600;
+}
+
+.credit-info.expired {
+  color: var(--text-muted);
+}
+
+.credit-info svg {
+  color: inherit !important;
+}
+
 .trial-info {
   color: var(--warning);
   font-weight: 600;
@@ -574,5 +614,17 @@
   .sharing-info .info-value {
     word-break: break-word;
     overflow-wrap: break-word;
+  }
+
+  .credit-info.info-row {
+    align-items: flex-start;
+  }
+
+  .credit-info.info-row .info-value {
+    flex: 1 1 100%;
+    margin-left: 24px;
+    margin-top: 4px;
+    text-align: left;
+    word-break: break-word;
   }
 }

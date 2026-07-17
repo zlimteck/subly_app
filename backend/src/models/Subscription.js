@@ -80,7 +80,14 @@ const subscriptionSchema = new mongoose.Schema({
   },
   shareNames: [{
     type: String
-  }]
+  }],
+  isCredit: {
+    type: Boolean,
+    default: false
+  },
+  endDate: {
+    type: Date
+  }
 }, {
   timestamps: true
 });

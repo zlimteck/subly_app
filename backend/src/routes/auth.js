@@ -524,4 +524,36 @@ router.put('/push-preferences', [
   }
 });
 
+// @route   GET /api/auth/api-token
+router.get('/api-token', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('apiToken');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!user.apiToken) {
+      user.generateApiToken();
+      await user.save();
+    }
+
+    res.json({ apiToken: user.apiToken });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// @route   POST /api/auth/api-token/regenerate
+router.post('/api-token/regenerate', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.generateApiToken();
+    await user.save();
+
+    res.json({ apiToken: user.apiToken });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 export default router;

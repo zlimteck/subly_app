@@ -18,6 +18,7 @@
 ## Features
 
 - 📊 **Subscription Tracking** - Monthly and annual subscriptions with smart cost calculations
+- 💳 **Credit / Installment Tracking** - Track car loans, 4x payments and any fixed-term recurring expense with automatic expiry
 - 🎯 **Trial Management** - Monitor free trials with expiration alerts
 - 📅 **Calendar Integration** - iCal subscription for Apple Calendar, Google Calendar, Outlook
 - 🔔 **Smart Notifications** - Email and browser push notifications (configurable 1-7 days before)
@@ -27,6 +28,7 @@
 - 🌐 **i18n** - English and French support
 - 📱 **Responsive** - Works seamlessly on desktop, tablet, and mobile
 - 🔐 **Secure** - JWT auth, bcrypt passwords, email verification, invitation system
+- 🔑 **API Token** - Persistent non-expiring token for external integrations and scripts
 - 🤖 **MCP Server** - Streamable HTTP MCP endpoint to control Subly via AI assistants (Claude, Cursor…)
 
 ## Quick Start
@@ -151,7 +153,7 @@ Subly exposes a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) 
 
 **Endpoint:** `POST http://<your-host>:5071/mcp`
 
-**Authentication:** Pass your Subly JWT as a Bearer token in the `Authorization` header.
+**Authentication:** Pass your Subly **API Token** (or JWT) as a Bearer token in the `Authorization` header. The API Token is recommended — it never expires and can be found in your Profile settings.
 
 ### Available tools
 
@@ -179,14 +181,14 @@ Add the following to your `claude_desktop_config.json`:
         "mcp-remote",
         "http://localhost:5071/mcp",
         "--header",
-        "Authorization:Bearer <your_subly_jwt>"
+        "Authorization:Bearer <your_api_token>"
       ]
     }
   }
 }
 ```
 
-> **Tip:** Retrieve your JWT by logging in via the Subly web app — it is stored in your browser's `localStorage` under the key `token`.
+> **Tip:** Get your API Token from **Profile → API Token** in the Subly web app. It never expires, unlike the JWT session token.
 
 ### Other compatible clients
 
@@ -199,7 +201,7 @@ Clients that support Streamable HTTP natively (Cursor, etc.) can connect directl
       "type": "http",
       "url": "http://localhost:5071/mcp",
       "headers": {
-        "Authorization": "Bearer <your_subly_jwt>"
+        "Authorization": "Bearer <your_api_token>"
       }
     }
   }

@@ -470,6 +470,40 @@
   color: var(--text-primary);
 }
 
+.profile-btn-danger {
+  border-color: color-mix(in srgb, var(--error) 60%, transparent);
+  color: var(--error);
+}
+
+.profile-btn-danger:hover {
+  background: color-mix(in srgb, var(--error) 15%, transparent);
+}
+
+.api-token-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.api-token-input {
+  flex: 1 1 0;
+  min-width: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.api-token-btn-icon {
+  flex-shrink: 0;
+}
+
+.api-token-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
 .profile-alert-error {
   background: color-mix(in srgb, var(--error) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--error) 30%, transparent);
@@ -674,6 +708,15 @@
   .profile-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .api-token-btn-icon {
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .api-token-input-row {
+    flex-wrap: nowrap;
   }
 
   .profile-push-toggle {

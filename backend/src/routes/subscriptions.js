@@ -107,13 +107,15 @@ router.get('/', async (req, res) => {
 // @route   GET /api/subscriptions/stats
 router.get('/stats', async (req, res) => {
   try {
+    const now = new Date();
     const subscriptions = await Subscription.find({ user: req.user._id, isActive: true });
+    const activeSubscriptions = subscriptions.filter(sub => !sub.isCredit || !sub.endDate || sub.endDate >= now);
 
     let totalMonthly = 0;
     let totalAnnual = 0;
     let totalMonthlyOnly = 0; // Only pure monthly subscriptions
 
-    subscriptions.forEach(sub => {
+    activeSubscriptions.forEach(sub => {
       // Use real cost (considering sharing)
       const realCost = sub.isShared ? sub.myRealCost : sub.amount;
 
@@ -127,7 +129,7 @@ router.get('/stats', async (req, res) => {
     });
 
     // Group by category (using real monthly cost)
-    const byCategory = subscriptions.reduce((acc, sub) => {
+    const byCategory = activeSubscriptions.reduce((acc, sub) => {
       const category = sub.category || 'Other';
       if (!acc[category]) {
         acc[category] = 0;
@@ -141,7 +143,7 @@ router.get('/stats', async (req, res) => {
       totalMonthlyOnly: Math.round(totalMonthlyOnly * 100) / 100,
       totalAnnual: Math.round(totalAnnual * 100) / 100,
       totalYearly: Math.round(totalMonthly * 12 * 100) / 100,
-      count: subscriptions.length,
+      count: activeSubscriptions.length,
       byCategory
     });
   } catch (error) {

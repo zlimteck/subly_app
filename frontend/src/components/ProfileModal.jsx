@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Download, Lock, User, Calendar, Sun, Moon, Mail, CheckCircle, AlertCircle, Shield, Send, Bell, Palette, Languages, DollarSign, Copy, Link } from 'lucide-react';
+import { X, Download, Lock, User, Calendar, Sun, Moon, Mail, CheckCircle, AlertCircle, Shield, Send, Bell, Palette, Languages, DollarSign, Copy, Link, Key, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
@@ -53,6 +53,13 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
   const [calendarUrl, setCalendarUrl] = useState('');
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarCopied, setCalendarCopied] = useState(false);
+
+  // API token states
+  const [apiToken, setApiToken] = useState('');
+  const [apiTokenLoading, setApiTokenLoading] = useState(false);
+  const [apiTokenCopied, setApiTokenCopied] = useState(false);
+  const [apiTokenVisible, setApiTokenVisible] = useState(false);
+  const [apiTokenRegenConfirm, setApiTokenRegenConfirm] = useState(false);
 
   // Sync emailData, emailNotifications, revenue, and push settings when user prop changes or modal opens
   useEffect(() => {
@@ -375,6 +382,42 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
     setTimeout(() => setCalendarCopied(false), 2000);
   };
 
+  const getApiToken = async () => {
+    setApiTokenLoading(true);
+    try {
+      const response = await axios.get('/api/auth/api-token');
+      setApiToken(response.data.apiToken);
+    } catch (error) {
+      console.error('Failed to get API token:', error);
+    } finally {
+      setApiTokenLoading(false);
+    }
+  };
+
+  const regenerateApiToken = async () => {
+    if (!apiTokenRegenConfirm) {
+      setApiTokenRegenConfirm(true);
+      return;
+    }
+    setApiTokenLoading(true);
+    setApiTokenRegenConfirm(false);
+    try {
+      const response = await axios.post('/api/auth/api-token/regenerate');
+      setApiToken(response.data.apiToken);
+      setApiTokenVisible(true);
+    } catch (error) {
+      console.error('Failed to regenerate API token:', error);
+    } finally {
+      setApiTokenLoading(false);
+    }
+  };
+
+  const copyApiToken = () => {
+    navigator.clipboard.writeText(apiToken);
+    setApiTokenCopied(true);
+    setTimeout(() => setApiTokenCopied(false), 2000);
+  };
+
   const accountAge = user?.createdAt
     ? Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24))
     : 0;
@@ -515,6 +558,60 @@ const ProfileModal = ({ isOpen, onClose, user, subscriptions }) => {
                 {t('profile.downloadCalendar')}
               </button>
             </div>
+          </div>
+
+          {/* API Token Section */}
+          <div className="profile-section">
+            <div className="profile-section-header">
+              <Key size={20} />
+              <h3 className="profile-section-title">&gt; {t('profile.apiToken')}</h3>
+            </div>
+            <p className="profile-section-description">
+              {t('profile.apiTokenDescription')}
+            </p>
+
+            {!apiToken ? (
+              <button onClick={getApiToken} className="profile-btn" disabled={apiTokenLoading}>
+                <Key size={16} />
+                {apiTokenLoading ? t('common.loading') : t('profile.showApiToken')}
+              </button>
+            ) : (
+              <div>
+                <div className="api-token-input-row">
+                  <input
+                    type={apiTokenVisible ? 'text' : 'password'}
+                    value={apiToken}
+                    readOnly
+                    className="profile-form-input api-token-input"
+                  />
+                  <button onClick={() => setApiTokenVisible(v => !v)} className="profile-btn api-token-btn-icon" title={apiTokenVisible ? t('profile.hide') : t('profile.show')}>
+                    {apiTokenVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                  <button onClick={copyApiToken} className="profile-btn api-token-btn-icon">
+                    {apiTokenCopied ? <CheckCircle size={16} /> : <Copy size={16} />}
+                    {apiTokenCopied ? t('profile.copied') : t('profile.copy')}
+                  </button>
+                </div>
+                <div className="api-token-actions">
+                  <button
+                    onClick={regenerateApiToken}
+                    className={`profile-btn ${apiTokenRegenConfirm ? 'profile-btn-danger' : ''}`}
+                    disabled={apiTokenLoading}
+                  >
+                    <RefreshCw size={16} />
+                    {apiTokenRegenConfirm ? t('profile.apiTokenRegenConfirm') : t('profile.apiTokenRegen')}
+                  </button>
+                  {apiTokenRegenConfirm && (
+                    <button onClick={() => setApiTokenRegenConfirm(false)} className="profile-btn">
+                      {t('common.cancel')}
+                    </button>
+                  )}
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '8px' }}>
+                  {t('profile.apiTokenHint')}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Revenue Section */}

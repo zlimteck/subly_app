@@ -25,6 +25,8 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
     iconFilename: '',
     isTrial: false,
     trialEndDate: '',
+    isCredit: false,
+    endDate: '',
     isShared: false,
     totalPeople: 2,
     peopleWhoPaid: 1,
@@ -61,6 +63,8 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
         iconFilename: initialData.iconFilename || '',
         isTrial: initialData.isTrial || false,
         trialEndDate: initialData.trialEndDate ? format(new Date(initialData.trialEndDate), 'yyyy-MM-dd') : '',
+        isCredit: initialData.isCredit || false,
+        endDate: initialData.endDate ? format(new Date(initialData.endDate), 'yyyy-MM-dd') : '',
         isShared: initialData.isShared || false,
         totalPeople: initialData.totalPeople || 2,
         peopleWhoPaid: initialData.peopleWhoPaid || 1,
@@ -316,7 +320,8 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
         amount: parseFloat(formData.amount),
         paymentMethod: formData.paymentMethod || null,
         category: formData.category || null,
-        trialEndDate: formData.trialEndDate || null
+        trialEndDate: formData.trialEndDate || null,
+        endDate: formData.endDate || null
       }
 
       await onSubmit(submitData)
@@ -508,6 +513,41 @@ function SubscriptionForm({ onSubmit, onCancel, onDelete, initialData, categorie
                 value={formData.trialEndDate}
                 onChange={handleChange}
                 required={formData.isTrial}
+                min={format(new Date(), 'yyyy-MM-dd')}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="form-row">
+          <div className="form-group checkbox-group">
+            <label>
+              <span className="terminal-prompt">&gt;</span> {t('subscription.credit').toUpperCase()}
+            </label>
+            <label htmlFor="isCredit" className="checkbox-inline">
+              <input
+                id="isCredit"
+                name="isCredit"
+                type="checkbox"
+                checked={formData.isCredit}
+                onChange={handleChange}
+              />
+              <span>{t('subscription.isCredit').toUpperCase()}</span>
+            </label>
+          </div>
+
+          {formData.isCredit && (
+            <div className="form-group">
+              <label htmlFor="endDate">
+                <span className="terminal-prompt">&gt;</span> {t('subscription.creditEndDate').toUpperCase()} *
+              </label>
+              <input
+                id="endDate"
+                name="endDate"
+                type="date"
+                value={formData.endDate}
+                onChange={handleChange}
+                required={formData.isCredit}
                 min={format(new Date(), 'yyyy-MM-dd')}
               />
             </div>
