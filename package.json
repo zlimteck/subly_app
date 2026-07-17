@@ -1,6 +1,6 @@
 {
   "name": "subly",
-  "version": "1.0.0",
+  "version": "1.3.7",
   "description": "Subscription expense tracker with monthly and annual support",
   "private": true,
   "workspaces": [
